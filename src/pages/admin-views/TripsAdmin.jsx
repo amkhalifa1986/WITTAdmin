@@ -4,6 +4,7 @@ import api from '../../services/api';
 import signalrService from '../../services/signalrService';
 import L from 'leaflet';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search, Eraser, MapPin, X, Navigation } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -303,12 +304,13 @@ const TripLocationModal = ({ trip, onClose, isRTL }) => {
 export const TripsAdmin = () => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const { toast, confirm } = usePopup();
   const [trips, setTrips] = useState([]);
   const [trains, setTrains] = useState([]);
+  const [trainTypes, setTrainTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTrainType, setSelectedTrainType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [trackingModalTrip, setTrackingModalTrip] = useState(null);
 
@@ -337,19 +339,21 @@ export const TripsAdmin = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, selectedTrainType]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [tripsRes, trainsRes] = await Promise.all([
+      const [tripsRes, trainsRes, typesRes] = await Promise.all([
         api.adminGetTrips(),
-        api.adminGetTrains()
+        api.adminGetTrains(),
+        api.adminGetTrainTypes()
       ]);
       setTrips(tripsRes.data || []);
       setTrains(trainsRes.data || []);
+      setTrainTypes(typesRes.data || []);
     } catch (err) {
-      setError('Failed to fetch data: ' + err.message);
+      toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -363,8 +367,6 @@ export const TripsAdmin = () => {
       status: 0
     });
     setIsModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -373,8 +375,6 @@ export const TripsAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     
     try {
       const payload = {
@@ -382,51 +382,50 @@ export const TripsAdmin = () => {
         tripDate: formData.tripDate
       };
       await api.adminCreateTrip(payload);
-      setSuccess(t('tripCreatedSuccess'));
+      toast(t('tripCreatedSuccess'), 'success');
       handleCloseModal();
       fetchData();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t('confirmDeleteTrip'))) return;
+    const confirmed = await confirm(t('confirmDeleteTrip'));
+    if (!confirmed) return;
     try {
       await api.adminDeleteTrip(id);
-      setSuccess(t('tripDeletedSuccess'));
+      toast(t('tripDeletedSuccess'), 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to delete trip: ' + err.message);
+      toast('Failed to delete trip: ' + err.message, 'error');
     }
   };
 
   const handleClearEndedTripsTelemetry = async () => {
-    if (!window.confirm(t('confirmClearOldTrips'))) return;
+    const confirmed = await confirm(t('confirmClearOldTrips'));
+    if (!confirmed) return;
     setLoading(true);
-    setError('');
-    setSuccess('');
     try {
       const res = await api.adminClearEndedTripsTelemetry();
-      setSuccess(isRTL ? `تم مسح بيانات التتبع بنجاح للرحلات القديمة (تم مسح ${res.data} سجلات).` : `Successfully cleared telemetry data for ended/cancelled trips (cleared ${res.data} records).`);
+      toast(isRTL ? `تم مسح بيانات التتبع بنجاح للرحلات القديمة (تم مسح ${res.data} سجلات).` : `Successfully cleared telemetry data for ended/cancelled trips (cleared ${res.data} records).`, 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to clear progress data: ' + err.message);
+      toast('Failed to clear progress data: ' + err.message, 'error');
       setLoading(false);
     }
   };
 
   const handleClearTripTelemetry = async (tripId, trainNumber, tripDate) => {
-    if (!window.confirm(t('confirmClearTrip').replace('{trainNumber}', trainNumber).replace('{tripDate}', tripDate))) return;
+    const confirmed = await confirm(t('confirmClearTrip').replace('{trainNumber}', trainNumber).replace('{tripDate}', tripDate));
+    if (!confirmed) return;
     setLoading(true);
-    setError('');
-    setSuccess('');
     try {
       await api.adminClearTripTelemetry(tripId);
-      setSuccess(t('tripTelemetryClearedSuccess').replace('{trainNumber}', trainNumber).replace('{tripDate}', tripDate));
+      toast(t('tripTelemetryClearedSuccess').replace('{trainNumber}', trainNumber).replace('{tripDate}', tripDate), 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to clear progress data: ' + err.message);
+      toast('Failed to clear progress data: ' + err.message, 'error');
       setLoading(false);
     }
   };
@@ -447,6 +446,9 @@ export const TripsAdmin = () => {
   };
 
   const filteredItems = trips.filter(item => {
+    if (selectedTrainType && item.trainTypeId !== selectedTrainType) {
+      return false;
+    }
     const term = searchTerm.toLowerCase();
     const trainNo = item.trainNumber?.toLowerCase() || '';
     const trainName = (isRTL ? item.trainNameAr : item.trainNameEn)?.toLowerCase() || '';
@@ -467,16 +469,32 @@ export const TripsAdmin = () => {
       
       {/* Header & Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ position: 'relative', width: '300px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            className="input-field" 
-            placeholder={t('searchTripsPlaceholder')} 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: '40px' }}
-          />
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t('searchTripsPlaceholder')} 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: '40px' }}
+            />
+          </div>
+          <select
+            className="input-field"
+            value={selectedTrainType}
+            onChange={(e) => {
+              setSelectedTrainType(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{ width: '180px', height: '40px', margin: 0, padding: '0 12px', cursor: 'pointer', appearance: 'auto' }}
+          >
+            <option value="">{isRTL ? '-- نوع القطار --' : '-- Train Type --'}</option>
+            {trainTypes.map(t => (
+              <option key={t.id} value={t.id}>{isRTL ? t.nameAr : t.nameEn}</option>
+            ))}
+          </select>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
@@ -492,8 +510,7 @@ export const TripsAdmin = () => {
         </div>
       </div>
 
-      {error && !isModalOpen && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && !isModalOpen && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
+
 
       {/* Data Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -601,7 +618,7 @@ export const TripsAdmin = () => {
               {t('scheduleNewTrip')}
             </h3>
             
-            {error && <div style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               

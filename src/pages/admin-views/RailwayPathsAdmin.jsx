@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search, Upload, Map, MapPin, X, ArrowLeft, Check, AlertTriangle, Download } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -11,11 +12,10 @@ const toArabicDigits = (num) => {
 
 export const RailwayPathsAdmin = () => {
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   const [paths, setPaths] = useState([]);
   const [stops, setStops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -46,7 +46,6 @@ export const RailwayPathsAdmin = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    setError('');
     try {
       const [pathsRes, stopsRes] = await Promise.all([
         api.adminGetRailwayPaths(),
@@ -56,7 +55,7 @@ export const RailwayPathsAdmin = () => {
       setStops(stopsRes.data || []);
     } catch (err) {
       console.error(err);
-      setError('Failed to fetch data: ' + err.message);
+      toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -224,15 +223,14 @@ export const RailwayPathsAdmin = () => {
 
     setSubmitting(true);
     setFormError('');
-    setSuccess('');
 
     try {
       if (editingPath) {
         await api.adminUpdateRailwayPath(editingPath.id, geoJsonText);
-        setSuccess('Railway path updated successfully.');
+        toast('Railway path updated successfully.', 'success');
       } else {
         await api.adminCreateRailwayPath(selectedStartStationId, selectedEndStationId, pathCode, geoJsonText);
-        setSuccess('Railway path created successfully.');
+        toast('Railway path created successfully.', 'success');
       }
       handleCloseForm();
       fetchData();
@@ -245,17 +243,16 @@ export const RailwayPathsAdmin = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this railway path? Associated stations will not be deleted.')) return;
+    const confirmed = await confirm('Are you sure you want to delete this railway path? Associated stations will not be deleted.');
+    if (!confirmed) return;
     
-    setError('');
-    setSuccess('');
     try {
       await api.adminDeleteRailwayPath(id);
-      setSuccess('Railway path deleted successfully.');
+      toast('Railway path deleted successfully.', 'success');
       fetchData();
     } catch (err) {
       console.error(err);
-      setError('Failed to delete railway path: ' + err.message);
+      toast('Failed to delete railway path: ' + err.message, 'error');
     }
   };
 
@@ -399,8 +396,7 @@ export const RailwayPathsAdmin = () => {
         </button>
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', fontWeight: 500, padding: '8px 0' }}>{error}</div>}
-      {success && <div style={{ color: 'var(--success)', fontWeight: 500, padding: '8px 0' }}>{success}</div>}
+
 
       {/* Railway Paths List Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

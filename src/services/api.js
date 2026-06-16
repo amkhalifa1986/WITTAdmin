@@ -372,15 +372,34 @@ class ApiClient {
     });
   }
 
-  async adminGetPendingSuggestions() {
-    return this.request('api/admin/suggestions');
+  async adminGetPendingTrainSuggestions() {
+    return this.request('api/admin/suggestions/trains');
   }
 
-  async adminReviewSuggestion(id, status, adminNotes) {
-    return this.request(`api/admin/suggestions/${id}/review`, {
+  async adminGetPendingStopSuggestions() {
+    return this.request('api/admin/suggestions/stops');
+  }
+
+  async adminReviewTrainSuggestion(id, status, data) {
+    return this.request(`api/admin/suggestions/trains/${id}/review`, {
       method: 'PUT',
-      body: JSON.stringify({ status, adminNotes })
+      body: JSON.stringify({ status, ...data })
     });
+  }
+
+  async adminReviewStopSuggestion(id, status, data) {
+    return this.request(`api/admin/suggestions/stops/${id}/review`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, ...data })
+    });
+  }
+
+  async getCities() {
+    return this.request('api/lookups/cities');
+  }
+
+  async getGovernorates() {
+    return this.request('api/lookups/governorates');
   }
 
   async adminGetPendingLiveUpdates() {

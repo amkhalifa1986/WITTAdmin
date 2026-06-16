@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Train, Loader, Save, X, ArrowLeft, ArrowRight, Trash2, Plus, GripVertical } from 'lucide-react';
 import FollowersBox from '../../components/FollowersBox';
 
@@ -9,11 +10,10 @@ export const EditTrain = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
+  const { toast } = usePopup();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const [formData, setFormData] = useState({
     trainNumber: '',
@@ -40,7 +40,6 @@ export const EditTrain = () => {
     const fetchTrainAndStops = async () => {
       try {
         setLoading(true);
-        setError('');
         
         // Fetch train details
         const trainRes = await api.getTrainDetails(id);
@@ -56,7 +55,7 @@ export const EditTrain = () => {
           const stops = trainRes.data.routeStops || [];
           setRouteStops(stops.sort((a, b) => a.stopOrder - b.stopOrder));
         } else {
-          setError(trainRes.error || 'Failed to fetch train details.');
+          toast(trainRes.error || 'Failed to fetch train details.', 'error');
         }
 
         // Fetch all stops
@@ -99,7 +98,7 @@ export const EditTrain = () => {
         }
       } catch (err) {
         console.error(err);
-        setError(err.message || 'Failed to load details.');
+        toast(err.message || 'Failed to load details.', 'error');
       } finally {
         setLoading(false);
       }
@@ -177,7 +176,7 @@ export const EditTrain = () => {
 
     const duplicate = routeStops.some((s, i) => i !== index && s.stopId === newStopId);
     if (duplicate) {
-      alert(isRTL ? 'هذه المحطة مضافة بالفعل في المسار.' : 'This stop is already added in the route.');
+      toast(isRTL ? 'هذه المحطة مضافة بالفعل في المسار.' : 'This stop is already added in the route.', 'warning');
       return;
     }
 
@@ -217,8 +216,6 @@ export const EditTrain = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setSuccess('');
 
     try {
       const payload = {
@@ -233,16 +230,16 @@ export const EditTrain = () => {
       };
       const res = await api.adminUpdateTrain(id, payload);
       if (res.isSuccess) {
-        setSuccess(isRTL ? 'تم تحديث القطار بنجاح.' : 'Train updated successfully.');
+        toast(isRTL ? 'تم تحديث القطار بنجاح.' : 'Train updated successfully.', 'success');
         setTimeout(() => {
           navigate('/');
         }, 1500);
       } else {
-        setError(res.error || 'Failed to update train.');
+        toast(res.error || 'Failed to update train.', 'error');
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     } finally {
       setSaving(false);
     }
@@ -352,35 +349,7 @@ export const EditTrain = () => {
           </div>
         </div>
 
-        {error && (
-          <div style={{
-            background: 'var(--danger-glow)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: 'var(--danger)',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            marginBottom: '20px',
-            fontSize: '0.9rem',
-            fontWeight: 500
-          }}>
-            {error}
-          </div>
-        )}
 
-        {success && (
-          <div style={{
-            background: 'var(--success-glow)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            color: 'var(--success)',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            marginBottom: '20px',
-            fontSize: '0.9rem',
-            fontWeight: 500
-          }}>
-            {success}
-          </div>
-        )}
 
         {/* Grid Container */}
         <div className="edit-train-grid" style={{

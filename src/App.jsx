@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/authContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { PopupProvider } from './context/PopupContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
@@ -50,77 +51,79 @@ function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public Authentication Routes */}
-              <Route path="/login" element={<Login />} />
+        <PopupProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public Authentication Routes */}
+                <Route path="/login" element={<Login />} />
 
-              {/* Admin Dedicated Route (Root for admin panel) */}
-              <Route 
-                path="/" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <Admin />
-                  </ProtectedRoute>
-                } 
-              />
+                {/* Admin Dedicated Route (Root for admin panel) */}
+                <Route 
+                  path="/" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
 
-              {/* Details & Edit Routes */}
-              <Route 
-                path="/train/:id" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <TrainDetails />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/trip/:id" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <TripDetails />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/edit-train/:id" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <EditTrain />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/edit-trip/:id" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <EditTrip />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/edit-stop/:id" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <EditStop />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/profile" 
-                element = {
-                  <ProtectedRoute adminOnly>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
+                {/* Details & Edit Routes */}
+                <Route 
+                  path="/train/:id" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <TrainDetails />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/trip/:id" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <TripDetails />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/edit-train/:id" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <EditTrain />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/edit-trip/:id" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <EditTrip />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/edit-stop/:id" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <EditStop />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element = {
+                    <ProtectedRoute adminOnly>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
 
-              {/* Fallback to root */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+                {/* Fallback to root */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </PopupProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

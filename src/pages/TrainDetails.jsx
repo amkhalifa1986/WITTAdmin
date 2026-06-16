@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/authContext';
+import { usePopup } from '../context/PopupContext';
 import { 
   Train, 
   MapPin, 
@@ -19,6 +20,7 @@ export const TrainDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
+  const { toast, alert, confirm } = usePopup();
   
   const { user } = useAuth();
   const isAdmin = user && (user.role === 1 || user.role === 'Admin');
@@ -129,13 +131,13 @@ export const TrainDetails = () => {
     
     const activeConfigs = dailyConfigs.filter(c => c.enabled);
     if (activeConfigs.length === 0) {
-      alert(t('pleaseEnableFollowOneDay'));
+      toast(t('pleaseEnableFollowOneDay'), 'warning');
       return;
     }
 
     for (const config of activeConfigs) {
       if (!config.targetStopId) {
-        alert(t('pleaseSelectTargetStationAllDays'));
+        toast(t('pleaseSelectTargetStationAllDays'), 'warning');
         return;
       }
     }
@@ -153,28 +155,29 @@ export const TrainDetails = () => {
       if (res.isSuccess) {
         setFollowPlan(res.data && res.data.length > 0 ? res.data : null);
         setShowFollowModal(false);
-        alert(t('planSaved'));
+        toast(t('planSaved'), 'success');
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || t('failedToSaveFollowPlan'));
+      toast(err.message || t('failedToSaveFollowPlan'), 'error');
     } finally {
       setSubmittingFollowPlan(false);
     }
   };
 
   const handleUnfollowTrain = async () => {
-    if (!window.confirm(t('unfollowPlanConfirm'))) return;
+    const confirmed = await confirm(t('unfollowPlanConfirm'));
+    if (!confirmed) return;
 
     try {
       const res = await api.deleteFollowPlan(train.id);
       if (res.isSuccess) {
         setFollowPlan(null);
-        alert(t('planDeleted'));
+        toast(t('planDeleted'), 'success');
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || t('failedToCancelFollowPlan'));
+      toast(err.message || t('failedToCancelFollowPlan'), 'error');
     }
   };
 

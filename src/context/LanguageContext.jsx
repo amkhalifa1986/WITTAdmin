@@ -93,7 +93,7 @@ const translations = {
     crowdLevel: 'Crowd Level',
     noStatusTag: 'No Status Tag',
     noCrowdTag: 'No Crowd Tag',
-    
+
     // Status & Crowd Labels
     OnTime: 'On Time',
     Delayed: 'Delayed',
@@ -153,7 +153,7 @@ const translations = {
     saveProfile: 'Save Profile Details',
     travelLog: 'Travel Tracking Log',
     noHistoryYet: 'No history found. Trains you follow and track will appear here.',
-    
+
     // Train Follow Plan
     follow: 'Follow',
     editPlan: 'Edit Plan',
@@ -409,7 +409,7 @@ const translations = {
   },
   ar: {
     // Nav & Common
-    appName: 'القطر فين',
+    appName: 'القطر وصل فين',
     dashboard: 'لوحة التحكم',
     searchTrains: 'البحث عن قطار',
     lostFound: 'المفقودات والمعثورات',
@@ -497,7 +497,7 @@ const translations = {
     crowdLevel: 'مستوى الازدحام',
     noStatusTag: 'بدون تحديد حالة',
     noCrowdTag: 'بدون تحديد ازدحام',
-    
+
     // Status & Crowd Labels
     OnTime: 'في الموعد',
     Delayed: 'متأخر',
@@ -557,7 +557,7 @@ const translations = {
     saveProfile: 'حفظ التعديلات',
     travelLog: 'سجل السفر والرحلات',
     noHistoryYet: 'السجل فارغ. القطارات التي تتابعها وتتتبعها ستظهر هنا.',
-    
+
     // Train Follow Plan
     follow: 'متابعة',
     editPlan: 'تعديل الخطة',

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search, Upload, Download, Eye, ChevronDown, X } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -12,12 +13,12 @@ const toArabicDigits = (num) => {
 export const TrainsAdmin = () => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const { toast, confirm } = usePopup();
   const [trains, setTrains] = useState([]);
   const [trainTypes, setTrainTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTrainType, setSelectedTrainType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
@@ -87,7 +88,7 @@ export const TrainsAdmin = () => {
       setTrains(trainsRes.data || []);
       setTrainTypes(typesRes.data || []);
     } catch (err) {
-      setError('Failed to fetch data: ' + err.message);
+      toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -103,8 +104,6 @@ export const TrainsAdmin = () => {
       trainTypeId: ''
     });
     setIsModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -113,8 +112,6 @@ export const TrainsAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     
     try {
       const payload = {
@@ -124,22 +121,23 @@ export const TrainsAdmin = () => {
       };
 
       await api.adminCreateTrain(payload);
-      setSuccess('Train created successfully.');
+      toast('Train created successfully.', 'success');
       handleCloseModal();
       fetchData();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this train?')) return;
+    const confirmed = await confirm('Are you sure you want to delete this train?');
+    if (!confirmed) return;
     try {
       await api.adminDeleteTrain(id);
-      setSuccess('Train deleted successfully.');
+      toast('Train deleted successfully.', 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to delete train: ' + err.message);
+      toast('Failed to delete train: ' + err.message, 'error');
     }
   };
 
@@ -147,15 +145,12 @@ export const TrainsAdmin = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setError('');
-    setSuccess('');
-
     try {
       const text = await file.text();
       
       const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
       if (lines.length <= 1) {
-        setError('CSV is empty or invalid.');
+        toast('CSV is empty or invalid.', 'error');
         e.target.value = null;
         return;
       }
@@ -191,7 +186,7 @@ export const TrainsAdmin = () => {
       setIsAnalyzeModalOpen(true);
 
     } catch (err) {
-      setError('Failed to read file: ' + err.message);
+      toast('Failed to read file: ' + err.message, 'error');
     } finally {
       e.target.value = null;
     }
@@ -200,16 +195,14 @@ export const TrainsAdmin = () => {
   const handleConfirmImport = async () => {
     setIsAnalyzeModalOpen(false);
     setImporting(true);
-    setError('');
-    setSuccess('');
 
     try {
       const ignoreDuplicates = analyzeDuplicateAction === 'ignore';
       const res = await api.adminImportTrains(analyzeResult.textContent, ignoreDuplicates);
-      setSuccess(`Imported successfully! (${analyzeResult.fileName})`);
+      toast(`Imported successfully! (${analyzeResult.fileName})`, 'success');
       fetchData();
     } catch (err) {
-      setError(err.message || 'Failed to import trains.');
+      toast(err.message || 'Failed to import trains.', 'error');
     } finally {
       setImporting(false);
       setAnalyzeResult(null);
@@ -238,6 +231,10 @@ export const TrainsAdmin = () => {
   };
 
   const filteredItems = trains.filter(item => {
+    if (selectedTrainType && item.trainTypeId !== selectedTrainType) {
+      return false;
+    }
+
     const term = normalizeSearch(searchTerm);
     if (!term) return true;
 
@@ -283,8 +280,22 @@ export const TrainsAdmin = () => {
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
           {isRTL ? 'القطارات' : 'Trains'}
         </h2>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: '500px', maxWidth: '100%' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            className="input-field"
+            value={selectedTrainType}
+            onChange={(e) => {
+              setSelectedTrainType(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{ width: '180px', height: '40px', margin: 0, padding: '0 12px', cursor: 'pointer', appearance: 'auto' }}
+          >
+            <option value="">{isRTL ? '-- نوع القطار --' : '-- Train Type --'}</option>
+            {trainTypes.map(t => (
+              <option key={t.id} value={t.id}>{isRTL ? t.nameAr : t.nameEn}</option>
+            ))}
+          </select>
+          <div style={{ position: 'relative', width: '380px', maxWidth: '100%' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
@@ -377,8 +388,7 @@ export const TrainsAdmin = () => {
         </div>
       </div>
 
-      {error && !isModalOpen && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && !isModalOpen && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
+
 
       {/* Data Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -473,7 +483,7 @@ export const TrainsAdmin = () => {
               Add New Train
             </h3>
             
-            {error && <div style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               

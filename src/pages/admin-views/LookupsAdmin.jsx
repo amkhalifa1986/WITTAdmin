@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -10,6 +11,7 @@ const toArabicDigits = (num) => {
 
 export const LookupsAdmin = () => {
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   const [activeTab, setActiveTab] = useState('cities'); // cities, governorates, statusTags, crowdLevels, trainTypes
   const [cities, setCities] = useState([]);
   const [governorates, setGovernorates] = useState([]);
@@ -17,8 +19,6 @@ export const LookupsAdmin = () => {
   const [crowdLevels, setCrowdLevels] = useState([]);
   const [trainTypes, setTrainTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -54,7 +54,7 @@ export const LookupsAdmin = () => {
       setCrowdLevels(crowdRes.data || []);
       setTrainTypes(typeRes.data || []);
     } catch (err) {
-      setError('Failed to fetch data: ' + err.message);
+      toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -95,8 +95,6 @@ export const LookupsAdmin = () => {
       });
     }
     setIsModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -106,8 +104,6 @@ export const LookupsAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     
     try {
       if (activeTab === 'cities') {
@@ -118,10 +114,10 @@ export const LookupsAdmin = () => {
         };
         if (editingItem) {
           await api.adminUpdateCity(editingItem.id, payload);
-          setSuccess('City updated successfully.');
+          toast('City updated successfully.', 'success');
         } else {
           await api.adminCreateCity(payload);
-          setSuccess('City created successfully.');
+          toast('City created successfully.', 'success');
         }
       } else if (activeTab === 'governorates') {
         const payload = {
@@ -130,26 +126,26 @@ export const LookupsAdmin = () => {
         };
         if (editingItem) {
           await api.adminUpdateGovernorate(editingItem.id, payload);
-          setSuccess('Governorate updated successfully.');
+          toast('Governorate updated successfully.', 'success');
         } else {
           await api.adminCreateGovernorate(payload);
-          setSuccess('Governorate created successfully.');
+          toast('Governorate created successfully.', 'success');
         }
       } else if (activeTab === 'statusTags') {
         if (editingItem) {
           await api.adminUpdateStatusTag(editingItem.id, formData.nameAr, formData.nameEn, formData.code, formData.color);
-          setSuccess('Status Tag updated successfully.');
+          toast('Status Tag updated successfully.', 'success');
         } else {
           await api.adminCreateStatusTag(formData.nameAr, formData.nameEn, formData.code, formData.color);
-          setSuccess('Status Tag created successfully.');
+          toast('Status Tag created successfully.', 'success');
         }
       } else if (activeTab === 'crowdLevels') {
         if (editingItem) {
           await api.adminUpdateCrowdLevel(editingItem.id, formData.nameAr, formData.nameEn, formData.code, formData.level);
-          setSuccess('Crowd Level updated successfully.');
+          toast('Crowd Level updated successfully.', 'success');
         } else {
           await api.adminCreateCrowdLevel(formData.nameAr, formData.nameEn, formData.code, formData.level);
-          setSuccess('Crowd Level created successfully.');
+          toast('Crowd Level created successfully.', 'success');
         }
       } else if (activeTab === 'trainTypes') {
         const payload = {
@@ -159,16 +155,16 @@ export const LookupsAdmin = () => {
         };
         if (editingItem) {
           await api.adminUpdateTrainType(editingItem.id, payload);
-          setSuccess('Train Type updated successfully.');
+          toast('Train Type updated successfully.', 'success');
         } else {
           await api.adminCreateTrainType(payload);
-          setSuccess('Train Type created successfully.');
+          toast('Train Type created successfully.', 'success');
         }
       }
       handleCloseModal();
       fetchData();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     }
   };
 
@@ -177,10 +173,9 @@ export const LookupsAdmin = () => {
     if (activeTab === 'statusTags') tabLabel = 'status tag';
     if (activeTab === 'crowdLevels') tabLabel = 'crowd level';
 
-    if (!window.confirm(`Are you sure you want to delete this ${tabLabel}?`)) return;
+    const confirmed = await confirm(`Are you sure you want to delete this ${tabLabel}?`);
+    if (!confirmed) return;
     
-    setError('');
-    setSuccess('');
     try {
       if (activeTab === 'cities') {
         await api.adminDeleteCity(id);
@@ -193,10 +188,10 @@ export const LookupsAdmin = () => {
       } else if (activeTab === 'trainTypes') {
         await api.adminDeleteTrainType(id);
       }
-      setSuccess('Item deleted successfully.');
+      toast('Item deleted successfully.', 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to delete item: ' + err.message);
+      toast('Failed to delete item: ' + err.message, 'error');
     }
   };
 
@@ -270,8 +265,7 @@ export const LookupsAdmin = () => {
         </button>
       </div>
 
-      {error && !isModalOpen && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && !isModalOpen && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
+
 
       {/* Data Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -377,7 +371,7 @@ export const LookupsAdmin = () => {
               }
             </h3>
             
-            {error && <div style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group">
@@ -441,7 +435,7 @@ export const LookupsAdmin = () => {
                               setFormData({...formData, markerPngUrl: res.data});
                             }
                           } catch (err) {
-                            setError('Failed to upload marker: ' + err.message);
+                            toast('Failed to upload marker: ' + err.message, 'error');
                           }
                         }
                       }} 

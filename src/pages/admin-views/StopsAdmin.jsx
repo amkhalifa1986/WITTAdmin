@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search, Upload, Download, Map, X } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -13,12 +14,11 @@ const toArabicDigits = (num) => {
 export const StopsAdmin = () => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const { toast, confirm } = usePopup();
   const [stops, setStops] = useState([]);
   const [cities, setCities] = useState([]);
   const [railwayPaths, setRailwayPaths] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [importing, setImporting] = useState(false);
@@ -129,7 +129,7 @@ export const StopsAdmin = () => {
       setCities(citiesRes.data || []);
       setRailwayPaths(pathsRes.data || []);
     } catch (err) {
-      setError((isRTL ? 'فشل في تحميل البيانات: ' : 'Failed to fetch data: ') + err.message);
+      toast((isRTL ? 'فشل في تحميل البيانات: ' : 'Failed to fetch data: ') + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -148,8 +148,6 @@ export const StopsAdmin = () => {
       railwayPathIds: []
     });
     setIsModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -158,8 +156,6 @@ export const StopsAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     
     // Convert lat/lng to numbers
     const payload = {
@@ -172,22 +168,23 @@ export const StopsAdmin = () => {
 
     try {
       await api.adminCreateStop(payload);
-      setSuccess(t('stopCreatedSuccess'));
+      toast(t('stopCreatedSuccess'), 'success');
       handleCloseModal();
       fetchData();
     } catch (err) {
-      setError(err.message || (isRTL ? 'فشلت العملية.' : 'Operation failed.'));
+      toast(err.message || (isRTL ? 'فشلت العملية.' : 'Operation failed.'), 'error');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t('deleteStopConfirm'))) return;
+    const confirmed = await confirm(t('deleteStopConfirm'));
+    if (!confirmed) return;
     try {
       await api.adminDeleteStop(id);
-      setSuccess(t('stopDeletedSuccess'));
+      toast(t('stopDeletedSuccess'), 'success');
       fetchData();
     } catch (err) {
-      setError((isRTL ? 'فشل في حذف المحطة: ' : 'Failed to delete stop: ') + err.message);
+      toast((isRTL ? 'فشل في حذف المحطة: ' : 'Failed to delete stop: ') + err.message, 'error');
     }
   };
 
@@ -195,15 +192,12 @@ export const StopsAdmin = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setError('');
-    setSuccess('');
-
     try {
       const text = await file.text();
       
       const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
       if (lines.length <= 1) {
-        setError(t('csvEmptyOrInvalid'));
+        toast(t('csvEmptyOrInvalid'), 'error');
         e.target.value = null;
         return;
       }
@@ -235,7 +229,7 @@ export const StopsAdmin = () => {
       setIsAnalyzeModalOpen(true);
 
     } catch (err) {
-      setError((isRTL ? 'فشل في قراءة الملف: ' : 'Failed to read file: ') + err.message);
+      toast((isRTL ? 'فشل في قراءة الملف: ' : 'Failed to read file: ') + err.message, 'error');
     } finally {
       e.target.value = null;
     }
@@ -244,16 +238,14 @@ export const StopsAdmin = () => {
   const handleConfirmImport = async () => {
     setIsAnalyzeModalOpen(false);
     setImporting(true);
-    setError('');
-    setSuccess('');
 
     try {
       const ignoreDuplicates = analyzeDuplicateAction === 'ignore';
       const res = await api.adminImportStops(analyzeResult.textContent, ignoreDuplicates);
-      setSuccess(`${t('importSuccessful')} (${analyzeResult.fileName})`);
+      toast(`${t('importSuccessful')} (${analyzeResult.fileName})`, 'success');
       fetchData();
     } catch (err) {
-      setError(err.message || (isRTL ? 'فشل استيراد المحطات.' : 'Failed to import stops.'));
+      toast(err.message || (isRTL ? 'فشل استيراد المحطات.' : 'Failed to import stops.'), 'error');
     } finally {
       setImporting(false);
       setAnalyzeResult(null);
@@ -322,8 +314,7 @@ export const StopsAdmin = () => {
         </div>
       </div>
 
-      {error && !isModalOpen && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && !isModalOpen && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
+
 
       {/* Data Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -412,7 +403,7 @@ export const StopsAdmin = () => {
               {t('addNewStop')}
             </h3>
             
-            {error && <div style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
+
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

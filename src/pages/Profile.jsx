@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/authContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePopup } from '../context/PopupContext';
 import api from '../services/api';
 import { User, Mail, FileText, Camera, History, Train, Clock, X, Trash2, Upload, Loader } from 'lucide-react';
 
 export const Profile = () => {
   const { user, updateUserProfile } = useAuth();
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [bio, setBio] = useState(user?.bio || '');
@@ -57,32 +59,34 @@ export const Profile = () => {
   }, []);
 
   const handleUnfollowUpcomingTrip = async (tripId) => {
-    if (!window.confirm(t('unfollowTripConfirm'))) return;
+    const confirmed = await confirm(t('unfollowTripConfirm'));
+    if (!confirmed) return;
 
     try {
       const res = await api.unfollowTrip(tripId);
       if (res.isSuccess) {
-        alert(t('unfollowedTripSuccess'));
+        toast(t('unfollowedTripSuccess'), 'success');
         fetchFollowPlansData();
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || t('failedToUnfollowTrip'));
+      toast(err.message || t('failedToUnfollowTrip'), 'error');
     }
   };
 
   const handleCancelFollowPlan = async (trainId) => {
-    if (!window.confirm(t('unfollowPlanConfirm'))) return;
+    const confirmed = await confirm(t('unfollowPlanConfirm'));
+    if (!confirmed) return;
 
     try {
       const res = await api.deleteFollowPlan(trainId);
       if (res.isSuccess) {
-        alert(t('planDeleted'));
+        toast(t('planDeleted'), 'success');
         fetchFollowPlansData();
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || t('failedToCancelFollowPlan'));
+      toast(err.message || t('failedToCancelFollowPlan'), 'error');
     }
   };
 

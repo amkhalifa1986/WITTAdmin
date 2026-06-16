@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Edit2, Trash2, Plus, Clock, Search, Shield, ShieldAlert, Key } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -10,12 +11,11 @@ const toArabicDigits = (num) => {
 
 export const AdminsRolesAdmin = () => {
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   const [activeTab, setActiveTab] = useState('admins'); // admins, roles
   const [admins, setAdmins] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -69,7 +69,7 @@ export const AdminsRolesAdmin = () => {
       setAdmins(adminsRes.data || []);
       setRoles(rolesRes.data || []);
     } catch (err) {
-      setError('Failed to fetch admin data: ' + err.message);
+      toast('Failed to fetch admin data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,6 @@ export const AdminsRolesAdmin = () => {
       });
     }
     setIsRoleModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleOpenAdminModal = (admin = null) => {
@@ -128,8 +126,6 @@ export const AdminsRolesAdmin = () => {
       });
     }
     setIsAdminModalOpen(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleRolePrivilegeChange = (moduleIndex, privilegeType, value) => {
@@ -147,27 +143,23 @@ export const AdminsRolesAdmin = () => {
 
   const handleRoleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     try {
       if (editingRole) {
         await api.adminUpdateRole(editingRole.id, roleForm);
-        setSuccess(t('roleUpdatedSuccess'));
+        toast(t('roleUpdatedSuccess'), 'success');
       } else {
         await api.adminCreateRole(roleForm);
-        setSuccess(t('roleCreatedSuccess'));
+        toast(t('roleCreatedSuccess'), 'success');
       }
       setIsRoleModalOpen(false);
       fetchData();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     }
   };
 
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     try {
       const payload = {
         email: adminForm.email,
@@ -182,41 +174,39 @@ export const AdminsRolesAdmin = () => {
 
       if (editingAdmin) {
         await api.adminUpdateAdmin(editingAdmin.id, payload);
-        setSuccess(t('adminUpdatedSuccess'));
+        toast(t('adminUpdatedSuccess'), 'success');
       } else {
         await api.adminCreateAdmin(payload);
-        setSuccess(t('adminCreatedSuccess'));
+        toast(t('adminCreatedSuccess'), 'success');
       }
       setIsAdminModalOpen(false);
       fetchData();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      toast(err.message || 'Operation failed.', 'error');
     }
   };
 
   const handleDeleteRole = async (id) => {
-    if (!window.confirm(t('confirmDeleteRole'))) return;
-    setError('');
-    setSuccess('');
+    const confirmed = await confirm(t('confirmDeleteRole'));
+    if (!confirmed) return;
     try {
       await api.adminDeleteRole(id);
-      setSuccess(t('roleDeletedSuccess'));
+      toast(t('roleDeletedSuccess'), 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to delete role: ' + err.message);
+      toast('Failed to delete role: ' + err.message, 'error');
     }
   };
 
   const handleDeleteAdmin = async (id) => {
-    if (!window.confirm(t('confirmDeleteAdmin'))) return;
-    setError('');
-    setSuccess('');
+    const confirmed = await confirm(t('confirmDeleteAdmin'));
+    if (!confirmed) return;
     try {
       await api.adminDeleteAdmin(id);
-      setSuccess(t('adminDeletedSuccess'));
+      toast(t('adminDeletedSuccess'), 'success');
       fetchData();
     } catch (err) {
-      setError('Failed to delete admin: ' + err.message);
+      toast('Failed to delete admin: ' + err.message, 'error');
     }
   };
 
@@ -279,9 +269,6 @@ export const AdminsRolesAdmin = () => {
           </button>
         )}
       </div>
-
-      {error && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
 
       {/* ADMINS TABLE */}
       {activeTab === 'admins' && (

@@ -4,6 +4,7 @@ import api from '../services/api';
 import signalrService from '../services/signalrService';
 import { useAuth } from '../context/authContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePopup } from '../context/PopupContext';
 import L from 'leaflet';
 import railwayPolylines from '../data/railwayPolylines';
 import { 
@@ -29,6 +30,7 @@ export const TripDetails = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
+  const { toast, alert, confirm } = usePopup();
   const isAdmin = user && (
     user.isSuperAdmin === true || 
     user.IsSuperAdmin === true || 
@@ -420,7 +422,7 @@ export const TripDetails = () => {
           }
         }, 10000);
       } else {
-        alert(t('geolocationNotSupported'));
+        toast(t('geolocationNotSupported'), 'error');
         setPassengerMode(false);
       }
     }
@@ -442,7 +444,7 @@ export const TripDetails = () => {
         setTrip(prev => prev ? { ...prev, isFollowedByCurrentUser: true, followerCount: prev.followerCount + 1 } : null);
       }
     } catch (err) {
-      alert('Failed to update follow status: ' + err.message);
+      toast('Failed to update follow status: ' + err.message, 'error');
     }
   };
 
@@ -469,43 +471,41 @@ export const TripDetails = () => {
   };
 
   const handleRequestRemoval = async (updateId) => {
-    if (!window.confirm(t('confirmRequestRemoval'))) return;
+    const isConfirmed = await confirm(t('confirmRequestRemoval'));
+    if (!isConfirmed) return;
     try {
       const res = await api.requestLiveUpdateRemoval(updateId);
       if (res.isSuccess) {
-        // Check if the backend auto-approved (direct removal) by checking if data is truthy
-        // If direct removal is enabled the post was deleted; remove it from the list.
-        // If pending approval the post still exists but is flagged; mark it.
         setTrip(prev => {
           if (!prev) return null;
-          // Try to detect direct removal: the update is gone from the server's perspective.
-          // We optimistically remove it from the UI for a snappier experience.
-          // If denied later the admin queue will show it; on next fetch it will be gone.
           return {
             ...prev,
             recentUpdates: prev.recentUpdates.filter(u => u.id !== updateId)
           };
         });
+        toast(t('removalRequestSubmitted') || 'Removal request submitted successfully.', 'success');
       }
     } catch (err) {
-      alert(err.message || 'Failed to request removal');
+      toast(err.message || 'Failed to request removal', 'error');
     }
   };
 
   const handleClearProgressData = async () => {
-    if (!window.confirm(t('confirmClearProgressData'))) return;
+    const isConfirmed = await confirm(t('confirmClearProgressData'));
+    if (!isConfirmed) return;
     setLoading(true);
     setError('');
     try {
       const res = await api.adminClearTripTelemetry(id);
-      alert(isRTL 
+      toast(isRTL 
         ? `تم مسح بيانات التتبع بنجاح لهذه الرحلة (تم مسح ${res.data} سجلات).` 
-        : `Successfully cleared telemetry data for this trip (cleared ${res.data} records).`
+        : `Successfully cleared telemetry data for this trip (cleared ${res.data} records).`,
+        'success'
       );
       await fetchTripDetails();
       setLiveTelemetry(null);
     } catch (err) {
-      alert((isRTL ? 'فشل في مسح البيانات: ' : 'Failed to clear progress data: ') + err.message);
+      toast((isRTL ? 'فشل في مسح البيانات: ' : 'Failed to clear progress data: ') + err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -555,7 +555,7 @@ export const TripDetails = () => {
         setCrowdState('');
         setShareLocation(false);
       } catch (err) {
-        alert((isRTL ? 'فشل في إرسال التحديث: ' : 'Failed to submit update: ') + err.message);
+        toast((isRTL ? 'فشل في إرسال التحديث: ' : 'Failed to submit update: ') + err.message, 'error');
       } finally {
         setSubmittingUpdate(false);
       }
@@ -571,12 +571,12 @@ export const TripDetails = () => {
           },
           (err) => {
             console.error('Geo error', err);
-            alert(t('locationSharingFailedCoords'));
+            toast(t('locationSharingFailedCoords'), 'error');
             submitData();
           }
         );
       } else {
-        alert(t('geolocationNotSupportedSubmitting'));
+        toast(t('geolocationNotSupportedSubmitting'), 'error');
         submitData();
       }
     } else {
@@ -761,8 +761,9 @@ export const TripDetails = () => {
                       try {
                         await api.toggleTripNotifications(trip.id, enabled);
                         setTrip(prev => prev ? { ...prev, isNotificationsEnabled: enabled } : null);
+                        toast(enabled ? t('notificationsEnabled') || 'Notifications enabled.' : t('notificationsDisabled') || 'Notifications disabled.', 'success');
                       } catch (err) {
-                        alert('Failed to update notification preferences: ' + err.message);
+                        toast('Failed to update notification preferences: ' + err.message, 'error');
                       }
                     }} 
                     className={`btn ${trip.isNotificationsEnabled ? 'btn-primary' : 'btn-secondary'}`}

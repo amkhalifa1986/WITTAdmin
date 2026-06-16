@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { usePopup } from '../context/PopupContext';
 import { Users, Search, Clock, Trash2 } from 'lucide-react';
 
 export const FollowersBox = ({ type, id }) => {
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,7 +38,8 @@ export const FollowersBox = ({ type, id }) => {
   };
 
   const handleDeleteFollower = async (userId) => {
-    if (!window.confirm(isRTL ? 'هل أنت متأكد من حذف هذا المتابع؟' : 'Are you sure you want to remove this follower?')) return;
+    const confirmed = await confirm(isRTL ? 'هل أنت متأكد من حذف هذا المتابع؟' : 'Are you sure you want to remove this follower?');
+    if (!confirmed) return;
     try {
       setLoading(true);
       let res;
@@ -47,19 +50,21 @@ export const FollowersBox = ({ type, id }) => {
       }
       if (res.isSuccess) {
         await fetchFollowers();
+        toast(isRTL ? 'تم حذف المتابع بنجاح' : 'Follower removed successfully.', 'success');
       } else {
-        alert(res.error || (isRTL ? 'فشل في حذف المتابع' : 'Failed to delete follower.'));
+        toast(res.error || (isRTL ? 'فشل في حذف المتابع' : 'Failed to delete follower.'), 'error');
       }
     } catch (err) {
       console.error(err);
-      alert(isRTL ? 'فشل في حذف المتابع' : 'Failed to delete follower.');
+      toast(isRTL ? 'فشل في حذف المتابع' : 'Failed to delete follower.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm(isRTL ? 'هل أنت متأكد من حذف جميع المتابعين؟' : 'Are you sure you want to clear all followers?')) return;
+    const confirmed = await confirm(isRTL ? 'هل أنت متأكد من حذف جميع المتابعين؟' : 'Are you sure you want to clear all followers?');
+    if (!confirmed) return;
     try {
       setLoading(true);
       let res;
@@ -70,12 +75,13 @@ export const FollowersBox = ({ type, id }) => {
       }
       if (res.isSuccess) {
         await fetchFollowers();
+        toast(isRTL ? 'تم حذف جميع المتابعين بنجاح' : 'All followers cleared successfully.', 'success');
       } else {
-        alert(res.error || (isRTL ? 'فشل في حذف المتابعين' : 'Failed to clear followers.'));
+        toast(res.error || (isRTL ? 'فشل في حذف المتابعين' : 'Failed to clear followers.'), 'error');
       }
     } catch (err) {
       console.error(err);
-      alert(isRTL ? 'فشل في حذف المتابعين' : 'Failed to clear followers.');
+      toast(isRTL ? 'فشل في حذف المتابعين' : 'Failed to clear followers.', 'error');
     } finally {
       setLoading(false);
     }

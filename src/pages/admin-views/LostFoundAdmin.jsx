@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePopup } from '../../context/PopupContext';
 import { Shield, MessageSquare, Phone, Train, Calendar, X, Edit, EyeOff, Eye, Trash2, CheckCircle, AlertCircle, Search, Clock } from 'lucide-react';
 
 
@@ -12,10 +13,9 @@ const toArabicDigits = (num) => {
 
 export const LostFoundAdmin = () => {
   const { t, isRTL } = useLanguage();
+  const { toast, confirm } = usePopup();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   // Filters State
   const [typeFilter, setTypeFilter] = useState('all'); // all, lost, found
@@ -28,8 +28,6 @@ export const LostFoundAdmin = () => {
   const [comments, setComments] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
-  const [modalError, setModalError] = useState('');
-  const [modalSuccess, setModalSuccess] = useState('');
   const [submittingModal, setSubmittingModal] = useState(false);
 
   useEffect(() => {
@@ -42,21 +40,18 @@ export const LostFoundAdmin = () => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await api.adminGetLostFoundPosts();
       setPosts(res.data || []);
     } catch (err) {
       console.error(err);
-      setError('Failed to fetch posts: ' + err.message);
+      toast('Failed to fetch posts: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleOpenDetails = async (post) => {
-    setModalError('');
-    setModalSuccess('');
     setIsEditing(false);
     try {
       // Get fresh details (including comments)
@@ -71,24 +66,22 @@ export const LostFoundAdmin = () => {
         contactInfo: res.data.contactInfo || ''
       });
     } catch (err) {
-      alert('Failed to retrieve details: ' + err.message);
+      toast('Failed to retrieve details: ' + err.message, 'error');
     }
   };
 
   const handleStatusToggle = async () => {
     if (!selectedPost) return;
-    setModalError('');
-    setModalSuccess('');
     
     const newStatus = selectedPost.status === 'Closed' ? 0 : 1; // 0 = Open, 1 = Closed/Resolved
     try {
       await api.adminUpdateLostFoundPostStatus(selectedPost.id, newStatus);
       const updatedPost = { ...selectedPost, status: newStatus === 1 ? 'Closed' : 'Open' };
       setSelectedPost(updatedPost);
-      setModalSuccess(`Post status successfully updated to ${newStatus === 1 ? 'Resolved' : 'Open'}.`);
+      toast(`Post status successfully updated to ${newStatus === 1 ? 'Resolved' : 'Open'}.`, 'success');
       fetchPosts();
     } catch (err) {
-      setModalError('Failed to update status: ' + err.message);
+      toast('Failed to update status: ' + err.message, 'error');
     }
   };
 
@@ -97,8 +90,6 @@ export const LostFoundAdmin = () => {
     if (!selectedPost) return;
     
     setSubmittingModal(true);
-    setModalError('');
-    setModalSuccess('');
 
     try {
       await api.adminUpdateLostFoundPost(
@@ -119,10 +110,10 @@ export const LostFoundAdmin = () => {
         contactInfo: editForm.contactInfo
       });
       setIsEditing(false);
-      setModalSuccess('Post details updated successfully.');
+      toast('Post details updated successfully.', 'success');
       fetchPosts();
     } catch (err) {
-      setModalError('Failed to update details: ' + err.message);
+      toast('Failed to update details: ' + err.message, 'error');
     } finally {
       setSubmittingModal(false);
     }
@@ -130,46 +121,44 @@ export const LostFoundAdmin = () => {
 
   const handleDeletePost = async () => {
     if (!selectedPost) return;
-    if (!window.confirm('Are you sure you want to permanently delete this report post? All comments will be deleted.')) return;
+    const confirmed = await confirm('Are you sure you want to permanently delete this report post? All comments will be deleted.');
+    if (!confirmed) return;
     
-    setModalError('');
     try {
       await api.adminDeleteLostFoundPost(selectedPost.id);
       setSelectedPost(null);
-      setSuccess('Post successfully deleted.');
+      toast('Post successfully deleted.', 'success');
       fetchPosts();
     } catch (err) {
-      setModalError('Failed to delete post: ' + err.message);
+      toast('Failed to delete post: ' + err.message, 'error');
     }
   };
 
   const handleHideCommentToggle = async (comment) => {
-    setModalError('');
-    setModalSuccess('');
     try {
-      await api.adminHideComment(comment.id, !comment.isHidden); // Wait, api.js uses adminHideLostFoundComment
+      await api.adminHideComment(comment.id, !comment.isHidden);
+      setComments(prev => prev.map(c => c.id === comment.id ? { ...c, isHidden: !c.isHidden } : c));
+      toast(`Comment visibility toggled.`, 'success');
     } catch (err) {
-      // Let's use the exact method: api.adminHideLostFoundComment
       try {
         await api.adminHideLostFoundComment(comment.id, !comment.isHidden);
         setComments(prev => prev.map(c => c.id === comment.id ? { ...c, isHidden: !c.isHidden } : c));
-        setModalSuccess(`Comment visibility toggled.`);
+        toast(`Comment visibility toggled.`, 'success');
       } catch (err2) {
-        setModalError('Failed to moderate comment: ' + err2.message);
+        toast('Failed to moderate comment: ' + err2.message, 'error');
       }
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment permanently?')) return;
-    setModalError('');
-    setModalSuccess('');
+    const confirmed = await confirm('Are you sure you want to delete this comment permanently?');
+    if (!confirmed) return;
     try {
       await api.adminDeleteLostFoundComment(commentId);
       setComments(prev => prev.filter(c => c.id !== commentId));
-      setModalSuccess('Comment deleted permanently.');
+      toast('Comment deleted permanently.', 'success');
     } catch (err) {
-      setModalError('Failed to delete comment: ' + err.message);
+      toast('Failed to delete comment: ' + err.message, 'error');
     }
   };
 
@@ -229,8 +218,7 @@ export const LostFoundAdmin = () => {
         </button>
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', fontWeight: 500 }}>{error}</div>}
-      {success && <div style={{ color: 'var(--success)', fontWeight: 500 }}>{success}</div>}
+
 
       {/* Main Listing Table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -323,8 +311,7 @@ export const LostFoundAdmin = () => {
               </button>
             </div>
 
-            {modalError && <div style={{ color: 'var(--danger)', background: 'var(--danger-glow)', border: '1px solid rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem' }}>{modalError}</div>}
-            {modalSuccess && <div style={{ color: 'var(--success)', background: 'var(--success-glow)', border: '1px solid rgba(16,185,129,0.1)', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem' }}>{modalSuccess}</div>}
+
 
             {/* Info Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: isEditing ? '1fr' : '1.3fr 1fr', gap: '20px' }}>
