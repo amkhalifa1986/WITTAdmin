@@ -50,7 +50,15 @@ class ApiClient {
       options.headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
-    let response = await fetch(url, options);
+    let response;
+    try {
+      response = await fetch(url, options);
+    } catch (err) {
+      if (!endpoint.includes('system-logs')) {
+        this.logError('Admin', url, `Network/Fetch error: ${err.message}`, err.message, err.stack).catch(() => {});
+      }
+      throw err;
+    }
 
     // If unauthorized, attempt token refresh
     if (response.status === 401 && this.refreshToken) {
@@ -69,7 +77,11 @@ class ApiClient {
     const data = await response.json().catch(() => ({}));
     
     if (!response.ok) {
-      throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
+      const errorMsg = data.error || data.message || `Request failed with status ${response.status}`;
+      if (!endpoint.includes('system-logs')) {
+        this.logError('Admin', url, `API request failed: ${errorMsg}`, errorMsg).catch(() => {});
+      }
+      throw new Error(errorMsg);
     }
 
     return data;
@@ -753,6 +765,35 @@ class ApiClient {
     return this.request(`api/admin/trips/${tripId}/clear-telemetry`, {
       method: 'POST'
     });
+  }
+
+  async adminGetSystemLogs(params) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`api/system-logs/admin?${query}`);
+  }
+
+  async adminClearSystemLogs() {
+    return this.request('api/system-logs/admin/clear', {
+      method: 'DELETE'
+    });
+  }
+
+  async reportLog(logData) {
+    return this.request('api/system-logs', {
+      method: 'POST',
+      body: JSON.stringify(logData)
+    });
+  }
+
+  async logError(source, target, description, errorMessage = null, stackTrace = null) {
+    return this.reportLog({
+      logLevel: 'Error',
+      source,
+      target,
+      description,
+      errorMessage,
+      stackTrace
+    }).catch(() => {}); // catch and ignore to prevent recursive errors
   }
 
   resolveImageUrl(url) {

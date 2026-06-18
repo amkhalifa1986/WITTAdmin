@@ -39,7 +39,6 @@ export const LookupsAdmin = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    setError('');
     try {
       const [citiesRes, govRes, tagsRes, crowdRes, typeRes] = await Promise.all([
         api.adminGetCities(),

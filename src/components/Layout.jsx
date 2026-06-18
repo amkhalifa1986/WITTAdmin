@@ -26,7 +26,8 @@ import {
   LayoutDashboard,
   MessageSquare,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Terminal
 } from 'lucide-react';
 
 export const Layout = ({ children }) => {
@@ -509,6 +510,11 @@ export const Layout = ({ children }) => {
               {hasPermission('Settings') && (
                 <button onClick={() => navigate('/?tab=settings')} className={`btn ${activeTab === 'settings' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'settings' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
                   <Settings size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemSettings')}</span>
+                </button>
+              )}
+              {hasPermission('Settings') && (
+                <button onClick={() => navigate('/?tab=system-logs')} className={`btn ${activeTab === 'system-logs' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'system-logs' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
+                  <Terminal size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemLogs') || 'System Logs'}</span>
                 </button>
               )}
               {(user?.isSuperAdmin || user?.IsSuperAdmin) && (

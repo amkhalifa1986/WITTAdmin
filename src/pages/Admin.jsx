@@ -35,9 +35,11 @@ import { LookupsAdmin } from './admin-views/LookupsAdmin';
 import { TrainsAdmin } from './admin-views/TrainsAdmin';
 import { TripsAdmin } from './admin-views/TripsAdmin';
 import { RailwayPathsAdmin } from './admin-views/RailwayPathsAdmin';
-import { LostFoundAdmin } from './admin-views/LostFoundAdmin';
-import { DashboardMapAndFeed } from './DashboardMapAndFeed';
 import { AdminsRolesAdmin } from './admin-views/AdminsRolesAdmin';
+import { LostFoundAdmin } from './admin-views/LostFoundAdmin';
+import { SystemLogsAdmin } from './admin-views/SystemLogsAdmin';
+import { DashboardMapAndFeed } from './DashboardMapAndFeed';
+
 
 const toArabicDigits = (num) => {
   const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -1538,6 +1540,11 @@ export const Admin = () => {
                 </>
               )}
             </div>
+          )}
+
+          {/* SYSTEM LOGS TAB */}
+          {activeTab === 'system-logs' && (
+            <SystemLogsAdmin />
           )}
         </>
       )}
