@@ -619,7 +619,7 @@ export const TrainsAdmin = () => {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
               {[...selectedRouteTrain.routeStops].sort((a, b) => a.stopOrder - b.stopOrder).map((stop, index) => (
-                <div key={stop.stopId || index} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(120, 120, 120, 0.02)' }}>
+                <div key={`${stop.stopId || stop.id}-${stop.stopOrder || index}`} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(120, 120, 120, 0.02)' }}>
                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>
                     {stop.stopOrder}
                   </div>

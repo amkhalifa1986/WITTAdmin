@@ -14,34 +14,29 @@ export const EditTrip = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [tripInfo, setTripInfo] = useState(null);
-  const [status, setStatus] = useState(0);
-
-  const tripStatuses = [
-    { value: 0, label: 'Scheduled', labelAr: 'مجدول' },
-    { value: 1, label: 'Departed', labelAr: 'غادر' },
-    { value: 2, label: 'InTransit', labelAr: 'في الطريق' },
-    { value: 3, label: 'Arrived', labelAr: 'وصل' },
-    { value: 4, label: 'Cancelled', labelAr: 'ملغي' },
-    { value: 5, label: 'Delayed', labelAr: 'متأخر' }
-  ];
-
-  const getStatusValue = (val) => {
-    if (typeof val === 'number') return val;
-    const st = tripStatuses.find(s => s.label.toLowerCase() === String(val).toLowerCase());
-    return st ? st.value : 0;
-  };
+  const [status, setStatus] = useState('');
+  const [tripStatuses, setTripStatuses] = useState([]);
 
   useEffect(() => {
-    const fetchTrip = async () => {
+    const fetchTripAndStatuses = async () => {
       try {
         setLoading(true);
         setError('');
-        const res = await api.getTripDetails(id);
-        if (res.isSuccess && res.data) {
-          setTripInfo(res.data);
-          setStatus(getStatusValue(res.data.status));
+        
+        const [tripRes, statusesRes] = await Promise.all([
+          api.getTripDetails(id),
+          api.adminGetTripStatuses()
+        ]);
+
+        if (statusesRes.data) {
+          setTripStatuses(statusesRes.data);
+        }
+
+        if (tripRes.isSuccess && tripRes.data) {
+          setTripInfo(tripRes.data);
+          setStatus(tripRes.data.statusDetails?.id || '');
         } else {
-          setError(res.error || 'Failed to fetch trip details.');
+          setError(tripRes.error || 'Failed to fetch trip details.');
         }
       } catch (err) {
         console.error(err);
@@ -52,7 +47,7 @@ export const EditTrip = () => {
     };
 
     if (id) {
-      fetchTrip();
+      fetchTripAndStatuses();
     }
   }, [id]);
 
@@ -63,7 +58,7 @@ export const EditTrip = () => {
     setSuccess('');
 
     try {
-      const res = await api.adminUpdateTripStatus(id, { status: parseInt(status) });
+      const res = await api.adminUpdateTripStatus(id, { statusId: status });
       if (res.isSuccess) {
         setSuccess(isRTL ? 'تم تحديث حالة الرحلة بنجاح.' : 'Trip status updated successfully.');
         setTimeout(() => {
@@ -171,9 +166,10 @@ export const EditTrip = () => {
               disabled={saving}
               style={{ width: '100%', padding: '10px 12px', fontSize: '0.9rem' }}
             >
+              <option value="">{isRTL ? '-- اختر حالة الرحلة --' : '-- Select Trip Status --'}</option>
               {tripStatuses.map(st => (
-                <option key={st.value} value={st.value}>
-                  {isRTL ? st.labelAr : st.label}
+                <option key={st.id} value={st.id}>
+                  {isRTL ? st.nameAr : st.nameEn}
                 </option>
               ))}
             </select>

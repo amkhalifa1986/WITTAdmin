@@ -959,13 +959,13 @@ export const TripDetails = () => {
               </h4>
               <div style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '8px', position: 'relative' }}>
                 <div className="trip-timeline" style={{ marginTop: 0 }}>
-                  {trip.routeStops?.map((stop) => {
+                  {trip.routeStops?.map((stop, index) => {
                     const isPassed = stop.stopOrder < currentStopOrder;
                     const isCurrent = stop.stopOrder === currentStopOrder;
                     const stopTracking = liveTelemetry?.upcomingStops?.find(us => us.stopId === stop.stopId);
                     
                     return (
-                      <div key={stop.stopId} className={`timeline-item ${isPassed ? 'passed' : ''} ${isCurrent ? 'current' : ''}`}>
+                      <div key={`${stop.stopId}-${stop.stopOrder || index}`} className={`timeline-item ${isPassed ? 'passed' : ''} ${isCurrent ? 'current' : ''}`}>
                         <div className="timeline-node"></div>
                         <div className="timeline-content">
                           <div className="station-details">

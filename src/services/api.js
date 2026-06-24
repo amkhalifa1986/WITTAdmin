@@ -370,6 +370,16 @@ class ApiClient {
     return this.request('api/admin/users');
   }
 
+  async adminGetUserRegistrationAnalytics(timeframe = 'Day', genderFilter = 'All') {
+    return this.request(`api/admin/users/analytics/registrations?timeframe=${timeframe}&genderFilter=${genderFilter}`);
+  }
+
+  async adminGetUserEngagementAnalytics(timeframe = 'Day', dateContext = null) {
+    let url = `api/admin/users/analytics/engagement?timeframe=${timeframe}`;
+    if (dateContext) url += `&dateContext=${dateContext.toISOString()}`;
+    return this.request(url);
+  }
+
   async adminToggleUserSuspension(userId, isSuspended) {
     return this.request(`api/admin/users/${userId}/suspend`, {
       method: 'PUT',
@@ -679,6 +689,44 @@ class ApiClient {
     });
   }
 
+  // --- Gender Lookups ---
+
+  async adminGetGenders() {
+    return this.request('api/admin/genders');
+  }
+
+  async adminCreateGender(nameAr, nameEn) {
+    return this.request('api/admin/genders', {
+      method: 'POST',
+      body: JSON.stringify({ nameAr, nameEn })
+    });
+  }
+
+  async adminUpdateGender(id, nameAr, nameEn) {
+    return this.request(`api/admin/genders/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ id, nameAr, nameEn })
+    });
+  }
+
+  async adminDeleteGender(id) {
+    return this.request(`api/admin/genders/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // --- Trip Status Lookups ---
+  async adminGetTripStatuses() {
+    return this.request('api/admin/trip-statuses');
+  }
+
+  async adminUpdateTripStatusLookup(id, nameAr, nameEn, color) {
+    return this.request(`api/admin/trip-statuses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ id, nameAr, nameEn, color })
+    });
+  }
+
   // Admin Lost & Found CRUD Extensions
   async adminUpdateLostFoundPost(id, title, description, type, trainNumber, contactInfo) {
     return this.request(`api/admin/lost-found/posts/${id}`, {
@@ -768,12 +816,29 @@ class ApiClient {
   }
 
   async adminGetSystemLogs(params) {
-    const query = new URLSearchParams(params).toString();
+    const cleanParams = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          cleanParams[key] = params[key];
+        }
+      });
+    }
+    const query = new URLSearchParams(cleanParams).toString();
     return this.request(`api/system-logs/admin?${query}`);
   }
 
-  async adminClearSystemLogs() {
-    return this.request('api/system-logs/admin/clear', {
+  async adminClearSystemLogs(params) {
+    const cleanParams = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          cleanParams[key] = params[key];
+        }
+      });
+    }
+    const queryStr = Object.keys(cleanParams).length > 0 ? `?${new URLSearchParams(cleanParams).toString()}` : '';
+    return this.request(`api/system-logs/admin/clear${queryStr}`, {
       method: 'DELETE'
     });
   }
@@ -794,6 +859,69 @@ class ApiClient {
       errorMessage,
       stackTrace
     }).catch(() => {}); // catch and ignore to prevent recursive errors
+  }
+
+  // --- System Log Archives ---
+  async adminTriggerSystemLogsArchive() {
+    return this.request('api/admin/system-log-archives/trigger', { method: 'POST' });
+  }
+
+  async adminGetSystemLogArchives() {
+    return this.request('api/admin/system-log-archives');
+  }
+
+  async adminDeleteSystemLogArchives(fileNames) {
+    return this.request('api/admin/system-log-archives', {
+      method: 'DELETE',
+      body: JSON.stringify({ fileNames })
+    });
+  }
+
+  async adminDownloadSystemLogArchives(fileNames) {
+    const url = `${BASE_URL}/api/admin/system-log-archives/download`;
+    const options = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileNames })
+    };
+    if (this.accessToken) {
+      options.headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`);
+    }
+    return response.blob();
+  }
+
+  async adminGetGalleryItems() {
+    return this.request('api/admin/gallery');
+  }
+
+  async adminCreateGalleryItem(formData) {
+    return this.request('api/admin/gallery', {
+      method: 'POST',
+      body: formData
+    });
+  }
+
+  async adminUpdateGalleryItem(id, formData) {
+    return this.request(`api/admin/gallery/${id}`, {
+      method: 'PUT',
+      body: formData
+    });
+  }
+
+  async adminToggleGalleryVisibility(id) {
+    return this.request(`api/admin/gallery/${id}/toggle`, {
+      method: 'PUT'
+    });
+  }
+
+  async adminDeleteGalleryItem(id) {
+    return this.request(`api/admin/gallery/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   resolveImageUrl(url) {

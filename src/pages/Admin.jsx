@@ -38,6 +38,9 @@ import { RailwayPathsAdmin } from './admin-views/RailwayPathsAdmin';
 import { AdminsRolesAdmin } from './admin-views/AdminsRolesAdmin';
 import { LostFoundAdmin } from './admin-views/LostFoundAdmin';
 import { SystemLogsAdmin } from './admin-views/SystemLogsAdmin';
+import { SystemLogArchivesAdmin } from './admin-views/SystemLogArchivesAdmin';
+import { GalleryAdmin } from './admin-views/GalleryAdmin';
+import UserDashboard from './admin-views/UserDashboard';
 import { DashboardMapAndFeed } from './DashboardMapAndFeed';
 
 
@@ -62,6 +65,7 @@ export const Admin = () => {
   const [trainSuggestionsList, setTrainSuggestionsList] = useState([]);
   const [stopSuggestionsList, setStopSuggestionsList] = useState([]);
   const [suggestionsSubTab, setSuggestionsSubTab] = useState('trains'); // 'trains' or 'stops'
+  const [usersSubTab, setUsersSubTab] = useState('dashboard'); // 'list' or 'dashboard'
   const [cities, setCities] = useState([]);
   const [governorates, setGovernorates] = useState([]);
   const [usersPage, setUsersPage] = useState(1);
@@ -166,7 +170,7 @@ export const Admin = () => {
       if (activeTab === 'dashboard') {
         const res = await api.getDashboardStats();
         setStatsData(res.data || null);
-      } else if (activeTab === 'users') {
+      } else if (activeTab === 'users' || activeTab === 'users-list') {
         const res = await api.adminGetUsers();
         setUsersList(res.data || []);
       } else if (activeTab === 'suggestions') {
@@ -529,9 +533,11 @@ export const Admin = () => {
           )}
 
           {/* USERS MANAGEMENT TAB */}
-          {activeTab === 'users' && (
+          {(activeTab === 'users' || activeTab === 'users-list' || activeTab === 'users-dashboard') && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="glass-panel" style={{ overflowX: 'auto' }}>
+              {(activeTab === 'users' || activeTab === 'users-list') && (
+                <>
+                  <div className="glass-panel" style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: isRTL ? 'right' : 'left', minWidth: '600px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -593,8 +599,11 @@ export const Admin = () => {
                   </button>
                 </div>
               )}
-            </div>
+            </>
           )}
+          {activeTab === 'users-dashboard' && <UserDashboard />}
+        </div>
+      )}
 
           {/* TRAINS CRUD TAB */}
           {activeTab === 'trains' && <TrainsAdmin />}
@@ -1545,6 +1554,16 @@ export const Admin = () => {
           {/* SYSTEM LOGS TAB */}
           {activeTab === 'system-logs' && (
             <SystemLogsAdmin />
+          )}
+
+          {/* SYSTEM LOG ARCHIVES TAB */}
+          {activeTab === 'system-log-archives' && (
+            <SystemLogArchivesAdmin />
+          )}
+
+          {/* PHOTO GALLERY TAB */}
+          {activeTab === 'gallery' && (
+            <GalleryAdmin />
           )}
         </>
       )}

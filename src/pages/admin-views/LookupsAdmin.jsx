@@ -12,12 +12,14 @@ const toArabicDigits = (num) => {
 export const LookupsAdmin = () => {
   const { t, isRTL } = useLanguage();
   const { toast, confirm } = usePopup();
-  const [activeTab, setActiveTab] = useState('cities'); // cities, governorates, statusTags, crowdLevels, trainTypes
+  const [activeTab, setActiveTab] = useState('cities'); // cities, governorates, statusTags, crowdLevels, trainTypes, genders, tripStatuses
   const [cities, setCities] = useState([]);
   const [governorates, setGovernorates] = useState([]);
   const [statusTags, setStatusTags] = useState([]);
   const [crowdLevels, setCrowdLevels] = useState([]);
   const [trainTypes, setTrainTypes] = useState([]);
+  const [genders, setGenders] = useState([]);
+  const [tripStatuses, setTripStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,18 +42,22 @@ export const LookupsAdmin = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [citiesRes, govRes, tagsRes, crowdRes, typeRes] = await Promise.all([
+      const [citiesRes, govRes, tagsRes, crowdRes, typeRes, gendersRes, tripStatusesRes] = await Promise.all([
         api.adminGetCities(),
         api.adminGetGovernorates(),
         api.adminGetStatusTags(),
         api.adminGetCrowdLevels(),
-        api.adminGetTrainTypes()
+        api.adminGetTrainTypes(),
+        api.adminGetGenders(),
+        api.adminGetTripStatuses()
       ]);
       setCities(citiesRes.data || []);
       setGovernorates(govRes.data || []);
       setStatusTags(tagsRes.data || []);
       setCrowdLevels(crowdRes.data || []);
       setTrainTypes(typeRes.data || []);
+      setGenders(gendersRes.data || []);
+      setTripStatuses(tripStatusesRes.data || []);
     } catch (err) {
       toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
@@ -67,7 +73,7 @@ export const LookupsAdmin = () => {
         nameAr: item ? item.nameAr : '',
         governorateId: item ? item.governorateId : ''
       });
-    } else if (activeTab === 'governorates') {
+    } else if (activeTab === 'governorates' || activeTab === 'genders') {
       setFormData({
         nameEn: item ? item.nameEn : '',
         nameAr: item ? item.nameAr : ''
@@ -78,6 +84,12 @@ export const LookupsAdmin = () => {
         nameAr: item ? item.nameAr : '',
         code: item ? item.code : '',
         color: item ? item.color : '#3b82f6'
+      });
+    } else if (activeTab === 'tripStatuses') {
+      setFormData({
+        nameEn: item ? item.nameEn : '',
+        nameAr: item ? item.nameAr : '',
+        color: item ? item.color : '#71717a'
       });
     } else if (activeTab === 'crowdLevels') {
       setFormData({
@@ -130,6 +142,18 @@ export const LookupsAdmin = () => {
           await api.adminCreateGovernorate(payload);
           toast('Governorate created successfully.', 'success');
         }
+      } else if (activeTab === 'genders') {
+        const payload = {
+          nameEn: formData.nameEn,
+          nameAr: formData.nameAr
+        };
+        if (editingItem) {
+          await api.adminUpdateGender(editingItem.id, payload.nameAr, payload.nameEn);
+          toast('Gender updated successfully.', 'success');
+        } else {
+          await api.adminCreateGender(payload.nameAr, payload.nameEn);
+          toast('Gender created successfully.', 'success');
+        }
       } else if (activeTab === 'statusTags') {
         if (editingItem) {
           await api.adminUpdateStatusTag(editingItem.id, formData.nameAr, formData.nameEn, formData.code, formData.color);
@@ -159,6 +183,11 @@ export const LookupsAdmin = () => {
           await api.adminCreateTrainType(payload);
           toast('Train Type created successfully.', 'success');
         }
+      } else if (activeTab === 'tripStatuses') {
+        if (editingItem) {
+          await api.adminUpdateTripStatusLookup(editingItem.id, formData.nameAr, formData.nameEn, formData.color);
+          toast('Trip Status updated successfully.', 'success');
+        }
       }
       handleCloseModal();
       fetchData();
@@ -186,6 +215,8 @@ export const LookupsAdmin = () => {
         await api.adminDeleteCrowdLevel(id);
       } else if (activeTab === 'trainTypes') {
         await api.adminDeleteTrainType(id);
+      } else if (activeTab === 'genders') {
+        await api.adminDeleteGender(id);
       }
       toast('Item deleted successfully.', 'success');
       fetchData();
@@ -201,6 +232,8 @@ export const LookupsAdmin = () => {
       case 'statusTags': return statusTags;
       case 'crowdLevels': return crowdLevels;
       case 'trainTypes': return trainTypes;
+      case 'genders': return genders;
+      case 'tripStatuses': return tripStatuses;
       default: return [];
     }
   };
@@ -239,6 +272,12 @@ export const LookupsAdmin = () => {
         <button onClick={() => { setActiveTab('trainTypes'); setSearchTerm(''); }} className={`btn ${activeTab === 'trainTypes' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
           Train Types
         </button>
+        <button onClick={() => { setActiveTab('genders'); setSearchTerm(''); }} className={`btn ${activeTab === 'genders' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+          Genders
+        </button>
+        <button onClick={() => { setActiveTab('tripStatuses'); setSearchTerm(''); }} className={`btn ${activeTab === 'tripStatuses' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+          Trip Statuses
+        </button>
       </div>
 
       {/* Header & Actions */}
@@ -254,14 +293,17 @@ export const LookupsAdmin = () => {
             style={{ paddingLeft: '40px' }}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-          <Plus size={18} /> Add {
-            activeTab === 'cities' ? 'City' : 
-            activeTab === 'governorates' ? 'Governorate' : 
-            activeTab === 'statusTags' ? 'Status Tag' : 
-            activeTab === 'trainTypes' ? 'Train Type' : 'Crowd Level'
-          }
-        </button>
+        {activeTab !== 'tripStatuses' && (
+          <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+            <Plus size={18} /> Add {
+              activeTab === 'cities' ? 'City' : 
+              activeTab === 'governorates' ? 'Governorate' : 
+              activeTab === 'statusTags' ? 'Status Tag' : 
+              activeTab === 'trainTypes' ? 'Train Type' : 
+              activeTab === 'genders' ? 'Gender' : 'Crowd Level'
+            }
+          </button>
+        )}
       </div>
 
 
@@ -273,9 +315,9 @@ export const LookupsAdmin = () => {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                 <th style={{ padding: '16px 24px' }}>Name</th>
-                {(activeTab === 'statusTags' || activeTab === 'crowdLevels') && <th style={{ padding: '16px 24px' }}>Code</th>}
+                {(activeTab === 'statusTags' || activeTab === 'crowdLevels' || activeTab === 'tripStatuses') && <th style={{ padding: '16px 24px' }}>Code</th>}
                 {activeTab === 'cities' && <th style={{ padding: '16px 24px' }}>Governorate</th>}
-                {activeTab === 'statusTags' && <th style={{ padding: '16px 24px' }}>Color</th>}
+                {(activeTab === 'statusTags' || activeTab === 'tripStatuses') && <th style={{ padding: '16px 24px' }}>Color</th>}
                 {activeTab === 'crowdLevels' && <th style={{ padding: '16px 24px' }}>Numeric Level</th>}
                 {activeTab === 'trainTypes' && <th style={{ padding: '16px 24px' }}>Map Marker</th>}
                 <th style={{ padding: '16px 24px', textAlign: 'center' }}>Actions</th>
@@ -292,9 +334,9 @@ export const LookupsAdmin = () => {
                 paginatedItems.map((item) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid rgba(120,120,120,0.02)', fontSize: '0.9rem' }}>
                     <td style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--text-primary)' }}>{isRTL ? item.nameAr : item.nameEn}</td>
-                    {(activeTab === 'statusTags' || activeTab === 'crowdLevels') && <td style={{ padding: '16px 24px', fontFamily: 'monospace' }}>{item.code}</td>}
+                    {(activeTab === 'statusTags' || activeTab === 'crowdLevels' || activeTab === 'tripStatuses') && <td style={{ padding: '16px 24px', fontFamily: 'monospace' }}>{item.code}</td>}
                     {activeTab === 'cities' && <td style={{ padding: '16px 24px' }}>{(isRTL ? item.governorate?.nameAr : item.governorate?.nameEn) || '-'}</td>}
-                    {activeTab === 'statusTags' && (
+                    {(activeTab === 'statusTags' || activeTab === 'tripStatuses') && (
                       <td style={{ padding: '16px 24px' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ display: 'inline-block', width: '14px', height: '14px', borderRadius: '4px', background: item.color || '#ccc', border: '1px solid var(--border-color)' }}></span>
@@ -320,9 +362,11 @@ export const LookupsAdmin = () => {
                       <button onClick={() => handleOpenModal(item)} className="btn btn-secondary" style={{ padding: '6px', minWidth: 'auto' }}>
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="btn btn-secondary" style={{ padding: '6px', minWidth: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)' }}>
-                        <Trash2 size={16} />
-                      </button>
+                      {activeTab !== 'tripStatuses' && (
+                        <button onClick={() => handleDelete(item.id)} className="btn btn-secondary" style={{ padding: '6px', minWidth: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -366,7 +410,9 @@ export const LookupsAdmin = () => {
                 activeTab === 'cities' ? 'City' : 
                 activeTab === 'governorates' ? 'Governorate' : 
                 activeTab === 'statusTags' ? 'Status Tag' : 
-                activeTab === 'trainTypes' ? 'Train Type' : 'Crowd Level'
+                activeTab === 'trainTypes' ? 'Train Type' : 
+                activeTab === 'genders' ? 'Gender' : 
+                activeTab === 'tripStatuses' ? 'Trip Status' : 'Crowd Level'
               }
             </h3>
             
@@ -401,7 +447,7 @@ export const LookupsAdmin = () => {
                 </div>
               )}
 
-              {activeTab === 'statusTags' && (
+              {(activeTab === 'statusTags' || activeTab === 'tripStatuses') && (
                 <div className="form-group">
                   <label>Color Code *</label>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

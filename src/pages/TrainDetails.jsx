@@ -304,8 +304,8 @@ export const TrainDetails = () => {
 
           {train.routeStops && train.routeStops.length > 0 ? (
             <div className="trip-timeline">
-              {train.routeStops.map((stop) => (
-                <div key={stop.stopId} className="timeline-item">
+              {train.routeStops.map((stop, index) => (
+                <div key={`${stop.stopId}-${stop.stopOrder || index}`} className="timeline-item">
                   <div className="timeline-node"></div>
                   <div className="timeline-content">
                     <div className="station-details">

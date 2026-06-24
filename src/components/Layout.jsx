@@ -27,7 +27,12 @@ import {
   MessageSquare,
   Shield,
   TrendingUp,
-  Terminal
+  Terminal,
+  Archive,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Image
 } from 'lucide-react';
 
 export const Layout = ({ children }) => {
@@ -64,6 +69,14 @@ export const Layout = ({ children }) => {
     return '';
   };
   const activeTab = getActiveTab();
+  const [isUsersMenuOpen, setIsUsersMenuOpen] = useState(false);
+  const [isSystemLogsMenuOpen, setIsSystemLogsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'users-dashboard' || activeTab === 'users-list' || activeTab === 'users') setIsUsersMenuOpen(true);
+    if (activeTab === 'system-logs' || activeTab === 'system-log-archives') setIsSystemLogsMenuOpen(true);
+  }, [activeTab]);
+
   const [disruptions, setDisruptions] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -453,9 +466,25 @@ export const Layout = ({ children }) => {
                 </button>
               )}
               {hasPermission('Users') && (
-                <button onClick={() => navigate('/?tab=users')} className={`btn ${activeTab === 'users' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'users' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
-                  <Users size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('users')}</span>
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <button onClick={() => setIsUsersMenuOpen(!isUsersMenuOpen)} className={`btn ${activeTab.startsWith('user') ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'space-between', border: 'none', background: activeTab.startsWith('user') ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Users size={18} style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('users')}</span>
+                    </div>
+                    {isUsersMenuOpen ? <ChevronDown size={16} /> : (isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />)}
+                  </button>
+                  {isUsersMenuOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: isRTL ? 0 : '34px', marginRight: isRTL ? '34px' : 0, marginTop: '4px', gap: '4px' }}>
+                      <button onClick={() => navigate('/?tab=users-dashboard')} className={`btn ${activeTab === 'users-dashboard' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '8px 12px', fontSize: '0.85rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'users-dashboard' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0 }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('usersDashboard')}</span>
+                      </button>
+                      <button onClick={() => navigate('/?tab=users-list')} className={`btn ${activeTab === 'users-list' || activeTab === 'users' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '8px 12px', fontSize: '0.85rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'users-list' || activeTab === 'users' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0 }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('usersList')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
               {hasPermission('Trains') && (
                 <button onClick={() => navigate('/?tab=trains')} className={`btn ${activeTab === 'trains' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'trains' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
@@ -475,6 +504,11 @@ export const Layout = ({ children }) => {
               {hasPermission('Lookups') && (
                 <button onClick={() => navigate('/?tab=lookups')} className={`btn ${activeTab === 'lookups' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'lookups' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
                   <Database size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('lookups')}</span>
+                </button>
+              )}
+              {hasPermission('Lookups') && (
+                <button onClick={() => navigate('/?tab=gallery')} className={`btn ${activeTab === 'gallery' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'gallery' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
+                  <Image size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('photoGallery') || 'Photo Gallery'}</span>
                 </button>
               )}
               {hasPermission('LostFound') && (
@@ -513,9 +547,25 @@ export const Layout = ({ children }) => {
                 </button>
               )}
               {hasPermission('Settings') && (
-                <button onClick={() => navigate('/?tab=system-logs')} className={`btn ${activeTab === 'system-logs' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'system-logs' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
-                  <Terminal size={18} style={{ flexShrink: 0 }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemLogs') || 'System Logs'}</span>
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <button onClick={() => setIsSystemLogsMenuOpen(!isSystemLogsMenuOpen)} className={`btn ${activeTab.startsWith('system-log') ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'space-between', border: 'none', background: activeTab.startsWith('system-log') ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Terminal size={18} style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemLogs')}</span>
+                    </div>
+                    {isSystemLogsMenuOpen ? <ChevronDown size={16} /> : (isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />)}
+                  </button>
+                  {isSystemLogsMenuOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: isRTL ? 0 : '34px', marginRight: isRTL ? '34px' : 0, marginTop: '4px', gap: '4px' }}>
+                      <button onClick={() => navigate('/?tab=system-logs')} className={`btn ${activeTab === 'system-logs' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '8px 12px', fontSize: '0.85rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'system-logs' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0 }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemLogs')}</span>
+                      </button>
+                      <button onClick={() => navigate('/?tab=system-log-archives')} className={`btn ${activeTab === 'system-log-archives' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '8px 12px', fontSize: '0.85rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'system-log-archives' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0 }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('systemLogArchives')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
               {(user?.isSuperAdmin || user?.IsSuperAdmin) && (
                 <button onClick={() => navigate('/?tab=admins-roles')} className={`btn ${activeTab === 'admins-roles' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '12px 16px', fontSize: '0.95rem', justifyContent: 'flex-start', border: 'none', background: activeTab === 'admins-roles' ? 'var(--accent-primary)' : 'transparent', width: '100%', margin: 0, overflow: 'hidden' }}>

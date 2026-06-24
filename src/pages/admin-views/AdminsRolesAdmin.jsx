@@ -43,6 +43,7 @@ export const AdminsRolesAdmin = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [editingAdmin, setEditingAdmin] = useState(null);
+  const [error, setError] = useState('');
 
   // Forms state
   const [roleForm, setRoleForm] = useState({ name: '', description: '', privileges: [] });

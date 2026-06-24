@@ -38,7 +38,13 @@ export const Dashboard = () => {
       ]);
       setStats(statsRes.data);
       setFollowedTrips(followedRes.data || []);
-      setTodayTrips(todayRes.data || []);
+      // Sort by scheduledDeparture (first stop) ascending so earliest trips appear first
+      const sorted = (todayRes.data || []).slice().sort((a, b) => {
+        const ta = a.scheduledDeparture || '99:99:99';
+        const tb = b.scheduledDeparture || '99:99:99';
+        return ta.localeCompare(tb);
+      });
+      setTodayTrips(sorted);
     } catch (err) {
       console.error(err);
       setError(t('Failed to load home page data. Please try again.'));

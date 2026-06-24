@@ -537,21 +537,20 @@ export const TripsAdmin = () => {
                     <td style={{ padding: '16px 24px' }}>{item.tripDate}</td>
                     <td style={{ padding: '16px 24px', color: 'var(--text-secondary)' }}>{item.followerCount || 0}</td>
                     <td style={{ padding: '16px 24px' }}>
-                      <span className={`badge ${
-                        (() => {
-                          const lbl = String(getStatusLabel(item.status)).toLowerCase();
-                          if (lbl.includes('on time') || lbl.includes('ontime') || lbl.includes('scheduled') || lbl.includes('arrived') || lbl.includes('مجدول') || lbl.includes('في الوقت') || lbl.includes('وصل')) {
-                            return 'badge-on-time';
-                          }
-                          if (lbl.includes('delayed') || lbl.includes('transit') || lbl.includes('departed') || lbl.includes('متأخر') || lbl.includes('في الطريق') || lbl.includes('تحرك')) {
-                            return 'badge-delayed';
-                          }
-                          if (lbl.includes('cancelled') || lbl.includes('ملغي')) {
-                            return 'badge-cancelled';
-                          }
-                          return 'badge-info';
-                        })()
-                      }`}>{getStatusLabel(item.status)}</span>
+                      <span 
+                        className="badge" 
+                        style={{
+                          backgroundColor: item.statusDetails?.color ? `${item.statusDetails.color}20` : 'var(--info-glow)',
+                          color: item.statusDetails?.color || 'var(--info)',
+                          borderColor: item.statusDetails?.color ? `${item.statusDetails.color}40` : 'rgba(59, 130, 246, 0.3)',
+                          borderWidth: '1px',
+                          borderStyle: 'solid'
+                        }}
+                      >
+                        {isRTL 
+                          ? (item.statusDetails?.nameAr || item.status) 
+                          : (item.statusDetails?.nameEn || item.status)}
+                      </span>
                     </td>
                     <td style={{ padding: '16px 24px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                       <button 
