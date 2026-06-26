@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { usePopup } from '../context/PopupContext';
+import { useSettings } from '../context/SettingsContext';
 import api from '../services/api';
 import { 
   Users, 
@@ -40,8 +41,9 @@ import { LostFoundAdmin } from './admin-views/LostFoundAdmin';
 import { SystemLogsAdmin } from './admin-views/SystemLogsAdmin';
 import { SystemLogArchivesAdmin } from './admin-views/SystemLogArchivesAdmin';
 import { GalleryAdmin } from './admin-views/GalleryAdmin';
-import UserDashboard from './admin-views/UserDashboard';
 import { DashboardMapAndFeed } from './DashboardMapAndFeed';
+
+const UserDashboard = React.lazy(() => import('./admin-views/UserDashboard'));
 
 
 const toArabicDigits = (num) => {
@@ -52,6 +54,7 @@ const toArabicDigits = (num) => {
 export const Admin = () => {
   const { t, isRTL } = useLanguage();
   const { toast, alert, confirm } = usePopup();
+  const { refetch: refetchGlobalSettings } = useSettings();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const activeTab = query.get('tab') || 'dashboard';
@@ -410,6 +413,7 @@ export const Admin = () => {
     setSavingSettings(true);
     try {
       await api.adminUpdateSystemSettings(systemSettings);
+      await refetchGlobalSettings();
       toast('System settings saved successfully.', 'success');
     } catch (err) {
       toast('Failed to save settings: ' + err.message, 'error');
@@ -1428,6 +1432,13 @@ export const Admin = () => {
                             desc: 'When enabled, a user\'s own "remove post" request is immediately processed. When disabled, the request is queued and requires admin approval.',
                             value: systemSettings.tripLiveUpdateRemovalAutoApprove ?? systemSettings.TripLiveUpdateRemovalAutoApprove,
                             onChange: (v) => setSystemSettings(s => ({ ...s, tripLiveUpdateRemovalAutoApprove: v, TripLiveUpdateRemovalAutoApprove: v }))
+                          },
+                          {
+                            key: 'gpsTrackingEnabled',
+                            label: 'Enable GPS Tracking & Map Views',
+                            desc: 'When enabled, live train GPS tracking on maps, speedometers, and location sharing features are fully functional. When disabled, all related map views and GPS tracking features disappear from the passenger web, passenger mobile, and admin apps.',
+                            value: systemSettings.gpsTrackingEnabled ?? systemSettings.GpsTrackingEnabled,
+                            onChange: (v) => setSystemSettings(s => ({ ...s, gpsTrackingEnabled: v, GpsTrackingEnabled: v }))
                           }
                         ].map(item => (
                           <label

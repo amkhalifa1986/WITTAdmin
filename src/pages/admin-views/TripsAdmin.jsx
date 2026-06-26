@@ -5,6 +5,7 @@ import signalrService from '../../services/signalrService';
 import L from 'leaflet';
 import { useLanguage } from '../../context/LanguageContext';
 import { usePopup } from '../../context/PopupContext';
+import { useSettings } from '../../context/SettingsContext';
 import { Edit2, Trash2, Plus, Clock, Search, Eraser, MapPin, X, Navigation } from 'lucide-react';
 
 const toArabicDigits = (num) => {
@@ -305,6 +306,8 @@ export const TripsAdmin = () => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { toast, confirm } = usePopup();
+  const { settings } = useSettings();
+  const gpsTrackingEnabled = settings?.gpsTrackingEnabled !== false;
   const [trips, setTrips] = useState([]);
   const [trains, setTrains] = useState([]);
   const [trainTypes, setTrainTypes] = useState([]);
@@ -553,14 +556,16 @@ export const TripsAdmin = () => {
                       </span>
                     </td>
                     <td style={{ padding: '16px 24px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button 
-                        onClick={() => setTrackingModalTrip(item)} 
-                        className="btn btn-secondary" 
-                        style={{ padding: '6px', minWidth: 'auto', borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
-                        title={isRTL ? "عرض الموقع المباشر" : "View Live Location"}
-                      >
-                        <MapPin size={16} />
-                      </button>
+                      {gpsTrackingEnabled && (
+                        <button 
+                          onClick={() => setTrackingModalTrip(item)} 
+                          className="btn btn-secondary" 
+                          style={{ padding: '6px', minWidth: 'auto', borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+                          title={isRTL ? "عرض الموقع المباشر" : "View Live Location"}
+                        >
+                          <MapPin size={16} />
+                        </button>
+                      )}
                       <button onClick={() => navigate(`/edit-trip/${item.id}`)} className="btn btn-secondary" style={{ padding: '6px', minWidth: 'auto' }} title={t('edit')}>
                         <Edit2 size={16} />
                       </button>

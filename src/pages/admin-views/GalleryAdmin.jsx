@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import { usePopup } from '../../context/PopupContext';
-import { Plus, Edit2, Trash2, Eye, EyeOff, X, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, X, Image as ImageIcon, Check, Loader2, ExternalLink } from 'lucide-react';
 
 export const GalleryAdmin = () => {
   const { t, isRTL } = useLanguage();

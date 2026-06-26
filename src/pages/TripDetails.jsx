@@ -6,6 +6,7 @@ import { useAuth } from '../context/authContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePopup } from '../context/PopupContext';
 import L from 'leaflet';
+import { useSettings } from '../context/SettingsContext';
 import railwayPolylines from '../data/railwayPolylines';
 import { 
   Train, 
@@ -31,6 +32,8 @@ export const TripDetails = () => {
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
   const { toast, alert, confirm } = usePopup();
+  const { settings } = useSettings();
+  const gpsTrackingEnabled = settings?.gpsTrackingEnabled !== false;
   const isAdmin = user && (
     user.isSuperAdmin === true || 
     user.IsSuperAdmin === true || 
@@ -155,9 +158,21 @@ export const TripDetails = () => {
 
   // Leaflet Map Rendering & Updates
   useEffect(() => {
-    if (!trip) return;
+    if (!gpsTrackingEnabled || !trip || !mapRef.current) {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      trainMarkerRef.current = null;
+      followerMarkerRef.current = null;
+      stopMarkersRef.current = [];
+      polylineRef.current = null;
+      setHasSetInitialBounds(false);
+      setMapReady(false);
+      return;
+    }
 
-    if (!mapInstanceRef.current && mapRef.current) {
+    if (!mapInstanceRef.current) {
       if (mapRef.current._leaflet_id) {
         return; // Avoid double initialization error
       }
@@ -353,7 +368,19 @@ export const TripDetails = () => {
         }
       }
     }
-  }, [trip, liveTelemetry, hasSetInitialBounds, loading]);
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      trainMarkerRef.current = null;
+      followerMarkerRef.current = null;
+      stopMarkersRef.current = [];
+      polylineRef.current = null;
+      setHasSetInitialBounds(false);
+      setMapReady(false);
+    };
+  }, [trip, liveTelemetry, hasSetInitialBounds, loading, gpsTrackingEnabled]);
 
   // Handle auto-centering viewport separately to prevent non-location updates from triggering recenter
   useEffect(() => {
@@ -366,19 +393,7 @@ export const TripDetails = () => {
     }
   }, [liveTelemetry, isAutoCentering, mapReady]);
 
-  // Cleanup Map on Unmount
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-      trainMarkerRef.current = null;
-      followerMarkerRef.current = null;
-      stopMarkersRef.current = [];
-      polylineRef.current = null;
-    };
-  }, []);
+  // Map cleanup is now handled in the main effect above
 
   // Passenger GPS Telemetry Broadcast Interval
   useEffect(() => {
@@ -803,16 +818,19 @@ export const TripDetails = () => {
       </div>
 
       {/* Main Content Layout Grid */}
-      <div className="dashboard-grid trip-details-grid">
+      <div className={`dashboard-grid trip-details-grid ${!gpsTrackingEnabled ? 'gps-disabled' : ''}`}>
         {/* Left Side: Map & Timeline side-by-side */}
         <div className="glass-panel" style={{ padding: '32px' }}>
-          <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Navigation size={20} color="var(--accent-primary)" /> {t('liveRouteTracking')}
-          </h3>
+          {gpsTrackingEnabled && (
+            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Navigation size={20} color="var(--accent-primary)" /> {t('liveRouteTracking')}
+            </h3>
+          )}
 
-          <div className="tracking-workspace" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <div className="tracking-workspace" style={{ gridTemplateColumns: gpsTrackingEnabled ? '1fr 1fr' : '1fr' }}>
             {/* Column 1: Map and Controls */}
-            <div>
+            {gpsTrackingEnabled && (
+              <div>
               {/* Map Container Wrapper */}
               <div style={{ position: 'relative', marginBottom: '20px' }}>
                 <div ref={mapRef} className="map-container" style={{ height: '580px', marginBottom: 0 }}>
@@ -951,6 +969,7 @@ export const TripDetails = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Column 2: Stops Timeline Sequence (Scrollable) */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1189,7 +1208,7 @@ export const TripDetails = () => {
                             </span>
                           )}
                         </div>
-                        {update.latitude && update.longitude && (
+                        {gpsTrackingEnabled && update.latitude && update.longitude && (
                           <a 
                             href={`https://maps.google.com/?q=${update.latitude},${update.longitude}`}
                             target="_blank"

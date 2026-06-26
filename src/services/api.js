@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5245';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5245';
 
 class ApiClient {
   constructor() {
@@ -29,16 +29,8 @@ class ApiClient {
   async request(endpoint, options = {}) {
     let url = `${BASE_URL}/${endpoint.replace(/^\//, '')}`;
     
-    // Add cache-busting query parameter for GET requests
-    if (options.method === 'GET' || !options.method) {
-      const separator = url.includes('?') ? '&' : '?';
-      url = `${url}${separator}_t=${Date.now()}`;
-    }
-    
     // Add default headers
     options.headers = {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
       ...options.headers,
     };
 
@@ -50,6 +42,10 @@ class ApiClient {
       options.headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+    options.signal = controller.signal;
+
     let response;
     try {
       response = await fetch(url, options);
@@ -58,6 +54,8 @@ class ApiClient {
         this.logError('Admin', url, `Network/Fetch error: ${err.message}`, err.message, err.stack).catch(() => {});
       }
       throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     // If unauthorized, attempt token refresh
@@ -581,6 +579,7 @@ class ApiClient {
   async adminUpdateSystemSettings(data) {
     return this.request('api/admin/system-settings', { method: 'PUT', body: JSON.stringify(data) });
   }
+  async getSystemSettingsPublic() { return this.request('api/settings'); }
   async adminGetAdAnalytics(startDate, endDate, trainNumber) {
     const query = new URLSearchParams();
     if (startDate) query.append('startDate', startDate);
