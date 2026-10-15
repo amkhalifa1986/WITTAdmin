@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -250,7 +251,7 @@ export const TripDetails = () => {
     // 3. PlotSnapped train marker & center view
     if (liveTelemetry && liveTelemetry.snappedLatitude && liveTelemetry.snappedLongitude) {
       const pos = [liveTelemetry.snappedLatitude, liveTelemetry.snappedLongitude];
-      const markerUrl = trip.markerPngUrl ? `http://localhost:5245${trip.markerPngUrl}` : '/train-marker.png';
+      const markerUrl = trip.markerPngUrl ? `${API_BASE_URL}${trip.markerPngUrl}` : '/train-marker.png';
       const trainIcon = L.divIcon({
         className: 'custom-train-marker-pin',
         html: `<div class="train-pulse-pin"></div><img src="${markerUrl}" style="width: 56px; height: 56px; display: block; object-fit: contain;" alt="Train Pin" />`,

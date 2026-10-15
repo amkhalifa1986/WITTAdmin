@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
@@ -349,7 +350,7 @@ export const LookupsAdmin = () => {
                       <td style={{ padding: '16px 24px' }}>
                         {item.markerPngUrl ? (
                           <img 
-                            src={`http://localhost:5245${item.markerPngUrl}`} 
+                            src={`${API_BASE_URL}${item.markerPngUrl}`} 
                             alt="Marker" 
                             style={{ width: '28px', height: '28px', objectFit: 'contain' }} 
                           />
@@ -487,7 +488,7 @@ export const LookupsAdmin = () => {
                     />
                     {formData.markerPngUrl && (
                       <img 
-                        src={`http://localhost:5245${formData.markerPngUrl}`} 
+                        src={`${API_BASE_URL}${formData.markerPngUrl}`} 
                         alt="Preview" 
                         style={{ width: '30px', height: '30px', objectFit: 'contain' }} 
                       />

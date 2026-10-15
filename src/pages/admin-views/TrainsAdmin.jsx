@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -416,7 +417,7 @@ export const TrainsAdmin = () => {
                     <td style={{ padding: '16px 24px' }}>
                       {item.markerPngUrl ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <img src={`http://localhost:5245${item.markerPngUrl}`} alt="Icon" style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
+                          <img src={`${API_BASE_URL}${item.markerPngUrl}`} alt="Icon" style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
                           {isRTL ? item.trainTypeNameAr : item.trainTypeNameEn}
                         </span>
                       ) : (
