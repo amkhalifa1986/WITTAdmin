@@ -123,7 +123,7 @@ const TripLocationModal = ({ trip, onClose, isRTL }) => {
 
     const trainIcon = L.divIcon({
       className: 'custom-train-marker-pin',
-      html: `<div class="train-pulse-pin" style="background: rgba(99, 102, 241, 0.45)"></div><img src="/train-marker.png" style="width: 40px; height: 40px; display: block;" alt="Train Pin" />`,
+      html: `<div class="train-pulse-pin" style="background: color-mix(in srgb, var(--accent-primary) 45%, transparent)"></div><img src="/train-marker.png" style="width: 40px; height: 40px; display: block;" alt="Train Pin" />`,
       iconSize: [40, 40],
       iconAnchor: [20, 40],
       popupAnchor: [0, -40]
@@ -215,7 +215,7 @@ const TripLocationModal = ({ trip, onClose, isRTL }) => {
                     fontWeight: 600,
                     backdropFilter: 'blur(12px)',
                     background: 'var(--accent-gradient)',
-                    color: '#ffffff',
+                    color: 'var(--accent-contrast)',
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
                     cursor: 'pointer'
                   }}

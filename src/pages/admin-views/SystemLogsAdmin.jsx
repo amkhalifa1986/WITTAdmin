@@ -243,8 +243,8 @@ export const SystemLogsAdmin = () => {
     let textColor = isDark ? '#cbd5e1' : '#475569';
 
     if (src === 'API') {
-      color = isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)';
-      textColor = isDark ? '#818cf8' : '#4f46e5';
+      color = isDark ? 'color-mix(in srgb, var(--accent-primary) 15%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, transparent)';
+      textColor = isDark ? 'var(--accent-primary)' : 'var(--accent-primary)';
     } else if (src === 'Frontend') {
       color = isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)';
       textColor = isDark ? '#34d399' : '#059669';

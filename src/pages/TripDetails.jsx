@@ -236,7 +236,7 @@ export const TripDetails = () => {
         const marker = L.marker([stop.latitude, stop.longitude], { icon: stopIcon })
           .addTo(map)
           .bindPopup(`
-            <div style="font-family: Outfit, sans-serif; padding: 4px;">
+            <div style="font-family: 'Space Grotesk', sans-serif; padding: 4px;">
               <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">${isRTL ? stop.stopNameAr : stop.stopNameEn}</h4>
               <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.8rem;">${isRTL ? stop.stopNameEn : stop.stopNameAr} (${stop.stopCode})</p>
             </div>
@@ -263,7 +263,7 @@ export const TripDetails = () => {
         trainMarkerRef.current = L.marker(pos, { icon: trainIcon })
           .addTo(map)
           .bindPopup(`
-            <div style="font-family: Outfit, sans-serif; padding: 4px; text-align: center;">
+            <div style="font-family: 'Space Grotesk', sans-serif; padding: 4px; text-align: center;">
               <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">Train ${trip.trainNumber}</h4>
               <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.8rem;">Speed: ${liveTelemetry.speed.toFixed(1)} km/h</p>
             </div>
@@ -272,7 +272,7 @@ export const TripDetails = () => {
         trainMarkerRef.current.setLatLng(pos);
         trainMarkerRef.current.setIcon(trainIcon);
         trainMarkerRef.current.setPopupContent(`
-          <div style="font-family: Outfit, sans-serif; padding: 4px; text-align: center;">
+          <div style="font-family: 'Space Grotesk', sans-serif; padding: 4px; text-align: center;">
             <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">Train ${trip.trainNumber}</h4>
             <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.8rem;">Speed: ${liveTelemetry.speed.toFixed(1)} km/h</p>
           </div>
@@ -327,7 +327,7 @@ export const TripDetails = () => {
         followerMarkerRef.current = L.marker(rawPos, { icon: followerIcon })
           .addTo(map)
           .bindPopup(`
-            <div style="font-family: Outfit, sans-serif; padding: 4px; text-align: center;">
+            <div style="font-family: 'Space Grotesk', sans-serif; padding: 4px; text-align: center;">
               <h4 style="margin: 0; color: var(--accent-primary); font-size: 0.9rem;">Follower Live GPS</h4>
               <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.75rem;">
                 Lat: ${liveTelemetry.rawLatitude.toFixed(5)}<br/>
@@ -339,7 +339,7 @@ export const TripDetails = () => {
         followerMarkerRef.current.setLatLng(rawPos);
         followerMarkerRef.current.setIcon(followerIcon);
         followerMarkerRef.current.setPopupContent(`
-          <div style="font-family: Outfit, sans-serif; padding: 4px; text-align: center;">
+          <div style="font-family: 'Space Grotesk', sans-serif; padding: 4px; text-align: center;">
             <h4 style="margin: 0; color: var(--accent-primary); font-size: 0.9rem;">Follower Live GPS</h4>
             <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.75rem;">
               Lat: ${liveTelemetry.rawLatitude.toFixed(5)}<br/>
@@ -728,13 +728,13 @@ export const TripDetails = () => {
             height: '60px',
             borderRadius: '16px',
             background: 'var(--accent-gradient)',
-            color: '#fff',
+            color: 'var(--accent-contrast)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1.5rem',
             fontWeight: 800,
-            fontFamily: 'Outfit'
+            fontFamily: 'Space Grotesk'
           }}>
             {trip.trainNumber}
           </div>
@@ -858,7 +858,7 @@ export const TripDetails = () => {
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       backdropFilter: 'blur(12px)',
                       background: 'var(--accent-gradient)',
-                      color: '#ffffff',
+                      color: 'var(--accent-contrast)',
                       cursor: 'pointer',
                       opacity: 1,
                       transition: 'all 0.3s ease'
@@ -921,8 +921,8 @@ export const TripDetails = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: 'rgba(99, 102, 241, 0.04)',
-                  border: '1px dashed rgba(99, 102, 241, 0.25)',
+                  background: 'color-mix(in srgb, var(--accent-primary) 4%, transparent)',
+                  border: '1px dashed color-mix(in srgb, var(--accent-primary) 25%, transparent)',
                   borderRadius: '10px',
                   padding: '12px 16px',
                   marginBottom: '20px'
@@ -1000,7 +1000,7 @@ export const TripDetails = () => {
 
                             {stopTracking && (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '4px' }}>
-                                <span className="badge badge-delayed" style={{ fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                                <span className="badge badge-delayed" style={{ fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'color-mix(in srgb, var(--accent-primary) 15%, transparent)', color: 'var(--accent-primary)', border: '1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent)' }}>
                                   <span style={{
                                     width: '6px',
                                     height: '6px',
@@ -1140,7 +1140,7 @@ export const TripDetails = () => {
                       {/* First Row: Avatar - Name - Time (Time moved to top right) */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div className="feed-avatar" style={{ background: 'var(--accent-primary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#ffffff', fontSize: '0.75rem' }}>
+                          <div className="feed-avatar" style={{ background: 'var(--accent-primary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--accent-contrast)', fontSize: '0.75rem' }}>
                             {update.authorName ? update.authorName[0].toUpperCase() : 'P'}
                           </div>
                           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{update.authorName}</span>
