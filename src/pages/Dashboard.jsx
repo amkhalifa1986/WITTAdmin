@@ -171,12 +171,12 @@ export const Dashboard = () => {
       )}
 
       {/* About the System Banner */}
-      <div className="glass-panel animate-fade" style={{ padding: '32px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%)', display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="glass-panel animate-fade" style={{ padding: '32px', background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 15%, transparent) 0%, color-mix(in srgb, var(--accent-secondary) 5%, transparent) 100%)', display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{
           width: '56px',
           height: '56px',
           borderRadius: '14px',
-          background: 'rgba(99, 102, 241, 0.2)',
+          background: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)',
           color: 'var(--accent-primary)',
           display: 'flex',
           alignItems: 'center',
@@ -267,13 +267,13 @@ export const Dashboard = () => {
                           width: '38px',
                           height: '38px',
                           borderRadius: '8px',
-                          background: 'rgba(6, 182, 212, 0.1)',
+                          background: 'color-mix(in srgb, var(--accent-secondary) 10%, transparent)',
                           color: 'var(--accent-secondary)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 700,
-                          fontFamily: 'Outfit'
+                          fontFamily: 'Space Grotesk'
                         }}>
                           {trip.trainNumber}
                         </div>
@@ -340,13 +340,13 @@ export const Dashboard = () => {
                           width: '38px',
                           height: '38px',
                           borderRadius: '8px',
-                          background: 'rgba(99, 102, 241, 0.1)',
+                          background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)',
                           color: 'var(--accent-primary)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 700,
-                          fontFamily: 'Outfit'
+                          fontFamily: 'Space Grotesk'
                         }}>
                           {trip.trainNumber}
                         </div>

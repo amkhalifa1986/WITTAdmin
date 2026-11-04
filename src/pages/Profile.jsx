@@ -208,7 +208,7 @@ export const Profile = () => {
                   justifyContent: 'center',
                   fontSize: '1.8rem',
                   fontWeight: 800,
-                  color: '#fff',
+                  color: 'var(--accent-contrast)',
                   overflow: 'hidden'
                 }}>
                   {avatarUrl ? (
@@ -229,7 +229,7 @@ export const Profile = () => {
                     borderRadius: '50%',
                     background: 'var(--accent-primary)',
                     border: '2px solid var(--bg-card)',
-                    color: '#fff',
+                    color: 'var(--accent-contrast)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -319,13 +319,13 @@ export const Profile = () => {
                       width: '36px',
                       height: '36px',
                       borderRadius: '8px',
-                      background: 'rgba(6, 182, 212, 0.1)',
+                      background: 'color-mix(in srgb, var(--accent-secondary) 10%, transparent)',
                       color: 'var(--accent-secondary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: 700,
-                      fontFamily: 'Outfit'
+                      fontFamily: 'Space Grotesk'
                     }}>
                       {item.trainNumber}
                     </div>
@@ -388,13 +388,13 @@ export const Profile = () => {
                         width: '36px',
                         height: '36px',
                         borderRadius: '8px',
-                        background: 'rgba(99, 102, 241, 0.1)',
+                        background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)',
                         color: 'var(--accent-primary)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 700,
-                        fontFamily: 'Outfit'
+                        fontFamily: 'Space Grotesk'
                       }}>
                         {trip.trainNumber}
                       </div>
@@ -485,13 +485,13 @@ export const Profile = () => {
                         width: '40px',
                         height: '40px',
                         borderRadius: '10px',
-                        background: 'rgba(6, 182, 212, 0.1)',
+                        background: 'color-mix(in srgb, var(--accent-secondary) 10%, transparent)',
                         color: 'var(--accent-secondary)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 800,
-                        fontFamily: 'Outfit',
+                        fontFamily: 'Space Grotesk',
                         fontSize: '1rem'
                       }}>
                         {group.trainNumber}
@@ -611,7 +611,7 @@ export const Profile = () => {
               justifyContent: 'center',
               fontSize: '3rem',
               fontWeight: 800,
-              color: '#fff',
+              color: 'var(--accent-contrast)',
               margin: '0 auto 24px auto',
               overflow: 'hidden',
               boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
