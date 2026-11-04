@@ -309,6 +309,8 @@ export const TripsAdmin = () => {
   const { settings } = useSettings();
   const gpsTrackingEnabled = settings?.gpsTrackingEnabled !== false;
   const [trips, setTrips] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [trains, setTrains] = useState([]);
   const [trainTypes, setTrainTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -336,31 +338,65 @@ export const TripsAdmin = () => {
     { value: 5, label: 'Delayed' }
   ];
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const itemsPerPage = 10;
 
+  // Wait until the admin stops typing before searching on the server
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedTrainType]);
+    const id = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchLookups = async () => {
     try {
-      const [tripsRes, trainsRes, typesRes] = await Promise.all([
-        api.adminGetTrips(),
+      const [trainsRes, typesRes] = await Promise.all([
         api.adminGetTrains(),
         api.adminGetTrainTypes()
       ]);
-      setTrips(tripsRes.data || []);
       setTrains(trainsRes.data || []);
       setTrainTypes(typesRes.data || []);
+    } catch (err) {
+      toast('Failed to fetch data: ' + err.message, 'error');
+    }
+  };
+
+  // Trips are paged, filtered and sorted on the server: the full history grows every day
+  const fetchTrips = async () => {
+    setLoading(true);
+    try {
+      const res = await api.adminGetTripsPage({
+        page: currentPage,
+        pageSize: itemsPerPage,
+        search: debouncedSearch,
+        trainTypeId: selectedTrainType
+      });
+      const pageData = res.data || {};
+      setTrips(pageData.items || []);
+      setTotalPages(Math.max(pageData.totalPages || 1, 1));
     } catch (err) {
       toast('Failed to fetch data: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchData = () => {
+    fetchLookups();
+    fetchTrips();
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedTrainType]);
+
+  useEffect(() => {
+    fetchLookups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchTrips();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, selectedTrainType]);
 
   const handleOpenModal = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -448,20 +484,7 @@ export const TripsAdmin = () => {
     return st ? t(st.label) : val;
   };
 
-  const filteredItems = trips.filter(item => {
-    if (selectedTrainType && item.trainTypeId !== selectedTrainType) {
-      return false;
-    }
-    const term = searchTerm.toLowerCase();
-    const trainNo = item.trainNumber?.toLowerCase() || '';
-    const trainName = (isRTL ? item.trainNameAr : item.trainNameEn)?.toLowerCase() || '';
-    const date = item.tripDate || '';
-    return trainNo.includes(term) || trainName.includes(term) || date.includes(term);
-  });
-
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedItems = trips;
 
   if (loading && trips.length === 0) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Clock className="animate-spin" size={32} color="var(--accent-primary)" /></div>;
@@ -530,7 +553,7 @@ export const TripsAdmin = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredItems.length === 0 ? (
+              {paginatedItems.length === 0 ? (
                 <tr><td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>{t('noTripsFound')}</td></tr>
               ) : (
                 paginatedItems.map((item) => (

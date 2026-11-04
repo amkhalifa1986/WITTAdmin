@@ -539,6 +539,13 @@ class ApiClient {
   }
 
   async adminGetTrips() { return this.request('api/admin/trips'); }
+  // One filtered page of trips; filtering and paging run on the server
+  async adminGetTripsPage({ page = 1, pageSize = 10, search = '', trainTypeId = '' } = {}) {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) params.set('search', search);
+    if (trainTypeId) params.set('trainTypeId', trainTypeId);
+    return this.request(`api/admin/trips?${params.toString()}`);
+  }
   async adminCreateTrip(data) {
     return this.request('api/admin/trips', { method: 'POST', body: JSON.stringify(data) });
   }
